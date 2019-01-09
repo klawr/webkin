@@ -1,0 +1,15 @@
+{
+    "license": "MIT",
+    "scripts": {
+        "build": "tsc && yarn run comp",
+        "comp": "npx google-closure-compiler --compilation_level=BUNDLE --language_in=ECMASCRIPT_2016 --module_resolution=NODE --js=out/engine.js out/stephenson2.js out/main.js --js_output_file=dist/tar.js"
+    },
+    "dependencies": {
+        "@types/mathjs": "^4.4.4",
+        "@types/node": "^10.12.18",
+        "google-closure-compiler": "^20181210.0.0",
+        "mathjs": "^5.4.0",
+        "npx": "^10.2.0"
+    },
+    "devDependencies": {}
+}
