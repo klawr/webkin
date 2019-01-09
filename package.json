@@ -11,6 +11,7 @@
     },
     "dependencies": {
         "closure-webpack-plugin": "^2.0.0-rc.17",
+        "g2d": "^2.5.0",
         "google-closure-compiler": "^20181231.0.0-webpack-beta",
         "mathjs": "^5.4.0",
         "typescript": "^3.2.2"

@@ -1,6 +1,5 @@
 
 import * as math from 'mathjs';
-import { stringify } from 'querystring';
 
 // links are merely sticks with a length. They have to connect to something, otherwise they are not controllable.
 export class Link
@@ -29,10 +28,10 @@ export class Mechanism
     readonly loops: Link[][][] = [];
     readonly vars: Link[];
     unknown: number[] = [];
-    readonly eqs: string[];
-    readonly evaqs: number[] = [];
-    readonly jacobi: string[][] = [];
-    readonly evacobi: number[][] = [];
+    readonly eqs: number[] = [];
+    readonly eqs_strings: string[];
+    readonly jacobi_strings: string[][] = [];
+    readonly jacobi: number[][] = [];
     readonly q: math.MathType;
     constructor(readonly links: Link[],readonly connections: Link[][])
     {
@@ -51,7 +50,9 @@ export class Mechanism
         });
         // identify the unknown values:
         this.vars = links.filter((l) => !l.w);
-        this.vars.forEach(() => this.unknown.push(1));
+        this.vars.forEach(() => this.unknown.push(Math.random()*2*Math.PI));
+         this.unknown = [0,333.4349488,206.4349488,135];
+         this.unknown = this.unknown.map((v) => v *= Math.PI/180);
         this.vars.map((v,idx) => {
             v.w = () => this.unknown[idx];
         });
@@ -87,47 +88,46 @@ export class Mechanism
         });
         // prepare the equation system for the jacobi matrix
         // @ts-ignore
-        [this.eqs, this.evaqs] = (() => {
-            const ret: string[] = [];
-            const retv: number[] = [];
+        [this.eqs, this.eqs_strings] = (() => {
+            const str: string[] = [];
+            const val: number[] = [];
             this.loops.forEach((loop) => {
-                let sin = ''
-                let cos = '';
-                let sinv = 0;
-                let cosv = 0;
+                let sin_str = ''
+                let cos_str = '';
+                let sin_val = 0;
+                let cos_val = 0;
                 loop.forEach((side, idx) => {
                     const sign = (idx ? ' - ' : ' + ' );
                     const signv = (idx ? -1 : 1);
                     side.forEach((link) => {
-                        sin += sign + `${link.r} * sin(${link.name})`;
-                        cos += sign + `${link.r} * cos(${link.name})`;
-                        sinv += link.r * Math.sin(link.w()) * signv;
-                        cosv += link.r * Math.cos(link.w()) * signv;
+                        sin_str += sign + `${link.r} * sin(${link.name})`;
+                        cos_str += sign + `${link.r} * cos(${link.name})`;
+                        sin_val += link.r * Math.sin(link.w()) * signv;
+                        cos_val += link.r * Math.cos(link.w()) * signv;
                     });
                 });
-                ret.push(sin, cos);
-                retv.push(sinv, cosv);
+                str.push(sin_str, cos_str);
+                val.push(sin_val, cos_val);
             });
-            return [ret, retv];
+            return [val, str];
         })();
         // create the jacobi matrix
-        this.eqs.forEach((eq,idx) => {
-            this.jacobi.push([]);
+        this.eqs_strings.forEach((eq,idx) => {
+            this.jacobi_strings.push([]);
             this.vars.forEach((v) => {
-                this.jacobi[idx].push(
+                this.jacobi_strings[idx].push(
                     math.derivative(eq, v.name)
                         .toString()
                         .replace(v.name, v.w().toString())
                 );
             })
         });
-        this.jacobi.forEach((col,idx) => {
-            this.evacobi.push([]);
+        this.jacobi_strings.forEach((col,idx) => {
+            this.jacobi.push([]);
             col.forEach((row) => {
-                this.evacobi[idx].push(math.eval(row));
+                this.jacobi[idx].push(math.eval(row));
             });
         });
-      //  this.eqs.forEach((eq) => this.evaqs.push(math.eval(eq)));
-        this.q = math.multiply(math.inv(this.evacobi), this.evaqs);
+       this.q = math.multiply(math.inv(math.transpose(this.jacobi)), this.eqs);
     }
 }
