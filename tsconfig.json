@@ -1,18 +1,23 @@
 {
     "compilerOptions": {
+        "sourceMap": true,
         "module":"es6",
-        "outDir": "./out",
-    "target": "ES2016",
-    "lib": [
-        "dom",
-        "es2017",
-        "es2018",
-        "esnext",
-    ],
-    "noImplicitAny": true,
-    "moduleResolution":"node",
+        "moduleResolution": "node",
+        "outDir": "dist",
+        "target": "ES2016",
+        "alwaysStrict": true,
+        "lib": [
+            "dom",
+            "es2017",
+            "es2018",
+            "esnext",
+        ],
+        "noImplicitAny": true,
+        "typeRoots": [
+            "node_modules/@types"
+        ]
     },
     "include": [
         "src/**/*"
-    ],
+    ]
 }

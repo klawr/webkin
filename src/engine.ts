@@ -1,7 +1,6 @@
 
-"use strict";
-
 import * as math from 'mathjs';
+import { stringify } from 'querystring';
 
 // links are merely sticks with a length. They have to connect to something, otherwise they are not controllable.
 export class Link
@@ -30,38 +29,11 @@ export class Mechanism
     readonly loops: Link[][][] = [];
     readonly vars: Link[];
     unknown: number[] = [];
-    readonly eq_str = () => {
-        const ret: string[] = [];
-        this.loops.forEach((loop) => {
-            let sin = ['',''];
-            let cos = ['',''];
-            loop.forEach((side, idx) => {
-                const sign = (idx ? ' - ' : ' + ' );
-                side.forEach((link) => {
-                    sin[+this.vars.includes(link)] += sign + `${link.r} * sin(${link.name})`;
-                    cos[+this.vars.includes(link)] += sign + `${link.r} * cos(${link.name})`;
-                });
-                // cos[0] += (idx ? ' - ' : '') + l.map((e) => `${e.r} * cos(${e.name}${(this.vars.includes(e) ? '?' : '')})`).join(idx ? ' - ' : ' + ');
-            });
-            ret.push(sin.join(' = '), cos.join(' = '));
-        });
-        return ret;
-    };
-    readonly eq = () => {
-        const eqs: number[] = [];
-        this.loops.forEach((loop) => {
-            let sin = 0;
-            let cos = 0;
-            loop.forEach((link) => {
-                link.forEach((l, idx) => {
-                    sin += (l.r + Math.sin(l.w())) * (idx ? -1 : 1);
-                    cos += (l.r + Math.cos(l.w())) * (idx ? -1 : 1);
-                })
-            })
-            eqs.push(sin, cos);
-        })
-        return eqs;
-    }
+    readonly eqs: string[];
+    readonly evaqs: number[] = [];
+    readonly jacobi: string[][] = [];
+    readonly evacobi: number[][] = [];
+    readonly q: math.MathType;
     constructor(readonly links: Link[],readonly connections: Link[][])
     {
         // filter for all elements who have no connector
@@ -79,7 +51,7 @@ export class Mechanism
         });
         // identify the unknown values:
         this.vars = links.filter((l) => !l.w);
-        this.vars.forEach(() => this.unknown.push(0));
+        this.vars.forEach(() => this.unknown.push(1));
         this.vars.map((v,idx) => {
             v.w = () => this.unknown[idx];
         });
@@ -113,5 +85,49 @@ export class Mechanism
                 )
             );
         });
+        // prepare the equation system for the jacobi matrix
+        // @ts-ignore
+        [this.eqs, this.evaqs] = (() => {
+            const ret: string[] = [];
+            const retv: number[] = [];
+            this.loops.forEach((loop) => {
+                let sin = ''
+                let cos = '';
+                let sinv = 0;
+                let cosv = 0;
+                loop.forEach((side, idx) => {
+                    const sign = (idx ? ' - ' : ' + ' );
+                    const signv = (idx ? -1 : 1);
+                    side.forEach((link) => {
+                        sin += sign + `${link.r} * sin(${link.name})`;
+                        cos += sign + `${link.r} * cos(${link.name})`;
+                        sinv += link.r * Math.sin(link.w()) * signv;
+                        cosv += link.r * Math.cos(link.w()) * signv;
+                    });
+                });
+                ret.push(sin, cos);
+                retv.push(sinv, cosv);
+            });
+            return [ret, retv];
+        })();
+        // create the jacobi matrix
+        this.eqs.forEach((eq,idx) => {
+            this.jacobi.push([]);
+            this.vars.forEach((v) => {
+                this.jacobi[idx].push(
+                    math.derivative(eq, v.name)
+                        .toString()
+                        .replace(v.name, v.w().toString())
+                );
+            })
+        });
+        this.jacobi.forEach((col,idx) => {
+            this.evacobi.push([]);
+            col.forEach((row) => {
+                this.evacobi[idx].push(math.eval(row));
+            });
+        });
+      //  this.eqs.forEach((eq) => this.evaqs.push(math.eval(eq)));
+        this.q = math.multiply(math.inv(this.evacobi), this.evaqs);
     }
 }

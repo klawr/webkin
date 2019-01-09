@@ -1,15 +1,26 @@
 {
+    "name": "webkinematik",
+    "version": "0.0.0",
     "license": "MIT",
+    "private": true,
+    "author": "Kai Lawrence",
+    "main": "dist/main.js",
     "scripts": {
-        "build": "tsc && yarn run comp",
-        "comp": "npx google-closure-compiler --compilation_level=BUNDLE --language_in=ECMASCRIPT_2016 --module_resolution=NODE --js=out/engine.js out/stephenson2.js out/main.js --js_output_file=dist/tar.js"
+        "build": "npx webpack --mode development --config webpack.config.js",
+        "watch": "npx webpack --mode development --watch"
     },
     "dependencies": {
+        "closure-webpack-plugin": "^2.0.0-rc.17",
+        "google-closure-compiler": "^20181231.0.0-webpack-beta",
+        "mathjs": "^5.4.0",
+        "typescript": "^3.2.2"
+    },
+    "devDependencies": {
         "@types/mathjs": "^4.4.4",
         "@types/node": "^10.12.18",
-        "google-closure-compiler": "^20181210.0.0",
-        "mathjs": "^5.4.0",
-        "npx": "^10.2.0"
-    },
-    "devDependencies": {}
+        "npx": "^10.2.0",
+        "ts-loader": "^5.3.3",
+        "webpack": "^4.28.1",
+        "webpack-cli": "^3.2.1"
+    }
 }
