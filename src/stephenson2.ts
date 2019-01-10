@@ -14,6 +14,8 @@ const b2 = new Link(111.803,a2, 'b2');
 const c1 = new Link(70.7106,base1, 'c1');
 const c2 = new Link(70.7106,base1,'c2',() => c1.w() - Math.PI/2);
 const c3 = new Link(100,c1,'c3', () => c1.w() - Math.PI * 3 / 4);
+const c4 = new Link(300,a0,'c4');
 
-export const stephenson2 = new Mechanism([a0,a1,a2,b1,b2,c1,c2,c3], [[b1,c2],[b2,c1]]);
-export const solver = new Solver(stephenson2);
+const stephenson2 = new Mechanism([a0,a1,a2,b1,b2,c1,c2,c3], [[b1,c2],[b2,c1]]);
+export const fourbar = new Mechanism([a0,c4,c1], [[c4,c1]]);
+export const solver = new Solver(fourbar);

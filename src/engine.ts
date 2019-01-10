@@ -2,6 +2,7 @@
 import * as math from 'mathjs';
 
 // links are merely sticks with a length. They have to connect to something, otherwise they are not controllable.
+const tau = 2* Math.PI;
 export class Link
 {
     constructor(
@@ -81,15 +82,15 @@ export class Solver {
     unknown: number[] = [];
     readonly eqs: number[] = [];
     readonly eqs_strings: string[];
-    readonly jacobi_strings: string[][] = [];
-    readonly jacobi: number[][] = [];
-    readonly q: math.MathType;
-    constructor(mec: Mechanism) {
-        mec.vars.forEach(() => this.unknown.push(Math.random()*2*Math.PI));
+    jacobi_strings: string[][] = [];
+    jacobi: number[][] = [];
+    q: number[];
+    constructor(public mec: Mechanism) {
+        mec.vars.forEach(() => this.unknown.push(Math.random()*tau));
 
         // For testing purposes => [0,333.4349488,206.4349488,135]
-        // this.unknown = [0,333.4349488,206.4349488,135];
-        // this.unknown = this.unknown.map((v) => v *= Math.PI/180);
+        //this.unknown = [0,300.4349488,206.4349488,135];
+        //this.unknown = this.unknown.map((v) => v *= Math.PI/180);
 
         mec.vars.map((v,idx) => {
             v.w = () => this.unknown[idx];
@@ -119,10 +120,14 @@ export class Solver {
             });
             return [val, str];
         })();
-        // create the jacobi matrix
+    }
+    // create the jacobi matrix
+    calc = () => {
+        this.jacobi = [];
+        this.jacobi_strings = [];
         this.eqs_strings.forEach((eq,idx) => {
             this.jacobi_strings.push([]);
-            mec.vars.forEach((v) => {
+            this.mec.vars.forEach((v) => {
                 this.jacobi_strings[idx].push(
                     math.derivative(eq, v.name)
                         .toString()
@@ -136,6 +141,19 @@ export class Solver {
                 this.jacobi[idx].push(math.eval(row));
             });
         });
-       this.q = math.multiply(math.inv(math.transpose(this.jacobi)), this.eqs);
+        //this.q = math.multiply(this.eqs, math.inv(math.transpose(this.jacobi))) as number[];
+        this.q = [];
+        //@ts-ignore
+        const tst: number[][] = math.inv(this.jacobi);
+        tst.forEach((row) => {
+            let val = 0;
+            row.forEach((col,idx) => {
+                val += col * this.eqs[idx];
+            });
+            this.q.push(-val);
+        })
+        this.unknown = this.unknown.map((val, idx) => {
+            return (val + this.q[idx]/100 ) % tau;
+        });
     }
 }
