@@ -1,6 +1,7 @@
 
-import { stephenson2 } from './stephenson2';
+import { stephenson2, solver } from './stephenson2';
 import * as math from 'mathjs';
+import { Link } from './engine';
 
 
 const g2 = require('g2d/src/g2.js');
@@ -21,7 +22,7 @@ const g = g2()
     .view({cartesian:true, x: 50, y:300})
     .grid()
     .ins((k: any) => {
-        steph.loops.forEach((loop) => {
+        steph.loops.forEach((loop: Link[][]) => {
             loop.forEach((link,idx) => {
                 let acc_x = 0;
                 let acc_y = 0;
@@ -43,9 +44,9 @@ const g = g2()
     requestAnimationFrame(render);
 })();
 
-console.log(steph.unknown);
-// console.log(steph);
-// console.log(steph.vars);
-console.log(steph.eqs);
-console.log(math.inv(steph.jacobi));
-console.log(steph.q);
+console.log(solver.q);
+// // console.log(steph);
+// // console.log(steph.vars);
+// console.log(steph.eqs);
+// console.log(math.inv(steph.jacobi));
+// console.log(steph.q);

@@ -27,12 +27,6 @@ export class Mechanism
 {
     readonly loops: Link[][][] = [];
     readonly vars: Link[];
-    unknown: number[] = [];
-    readonly eqs: number[] = [];
-    readonly eqs_strings: string[];
-    readonly jacobi_strings: string[][] = [];
-    readonly jacobi: number[][] = [];
-    readonly q: math.MathType;
     constructor(readonly links: Link[],readonly connections: Link[][])
     {
         // filter for all elements who have no connector
@@ -50,12 +44,6 @@ export class Mechanism
         });
         // identify the unknown values:
         this.vars = links.filter((l) => !l.w);
-        this.vars.forEach(() => this.unknown.push(Math.random()*2*Math.PI));
-         this.unknown = [0,333.4349488,206.4349488,135];
-         this.unknown = this.unknown.map((v) => v *= Math.PI/180);
-        this.vars.map((v,idx) => {
-            v.w = () => this.unknown[idx];
-        });
         // closed integral conditions for the mechanism
         connections.forEach((con) => {
             // create a loop for each connection
@@ -86,12 +74,32 @@ export class Mechanism
                 )
             );
         });
+    }
+}
+
+export class Solver {
+    unknown: number[] = [];
+    readonly eqs: number[] = [];
+    readonly eqs_strings: string[];
+    readonly jacobi_strings: string[][] = [];
+    readonly jacobi: number[][] = [];
+    readonly q: math.MathType;
+    constructor(mec: Mechanism) {
+        mec.vars.forEach(() => this.unknown.push(Math.random()*2*Math.PI));
+
+        // For testing purposes => [0,333.4349488,206.4349488,135]
+        // this.unknown = [0,333.4349488,206.4349488,135];
+        // this.unknown = this.unknown.map((v) => v *= Math.PI/180);
+
+        mec.vars.map((v,idx) => {
+            v.w = () => this.unknown[idx];
+        });
         // prepare the equation system for the jacobi matrix
         // @ts-ignore
         [this.eqs, this.eqs_strings] = (() => {
             const str: string[] = [];
             const val: number[] = [];
-            this.loops.forEach((loop) => {
+            mec.loops.forEach((loop) => {
                 let sin_str = ''
                 let cos_str = '';
                 let sin_val = 0;
@@ -114,7 +122,7 @@ export class Mechanism
         // create the jacobi matrix
         this.eqs_strings.forEach((eq,idx) => {
             this.jacobi_strings.push([]);
-            this.vars.forEach((v) => {
+            mec.vars.forEach((v) => {
                 this.jacobi_strings[idx].push(
                     math.derivative(eq, v.name)
                         .toString()

@@ -1,5 +1,5 @@
 
-import { Base, Link, Mechanism } from './engine';
+import { Base, Link, Mechanism, Solver } from './engine';
 
 // control angle
 let phi = Math.PI/2;
@@ -16,3 +16,4 @@ const c2 = new Link(70.7106,base1,'c2',() => c1.w() - Math.PI/2);
 const c3 = new Link(100,c1,'c3', () => c1.w() - Math.PI * 3 / 4);
 
 export const stephenson2 = new Mechanism([a0,a1,a2,b1,b2,c1,c2,c3], [[b1,c2],[b2,c1]]);
+export const solver = new Solver(stephenson2);
