@@ -1,159 +1,126 @@
 
-import * as math from 'mathjs';
+const tau = 2* Math.PI; // just because
 
-// links are merely sticks with a length. They have to connect to something, otherwise they are not controllable.
-const tau = 2* Math.PI;
+export class Value
+{
+    constructor(
+        readonly val: (...args: Link[]) => number,
+        readonly argIds: string[] = []
+    ) {
+    }
+}
+
+export class Mechanism
+{
+    readonly links = new Map<string, Link>();
+
+    constructor() {}
+    defineLink(id: string, params: { length?: Value, angle?: Value, parentId?: string } = {}): Link
+    {
+        let l = new Link(id, params.parentId, params.length, params.angle);
+        this.links.set(id, l);
+        return l;
+    }
+
+    extractLoop(leftId: string, rightId: string)
+    {
+        const left = this.buildChain(leftId);
+        const right = this.buildChain(rightId);
+
+        return new Loop(left, right);
+    }
+
+    private buildChain(id: string)
+    {
+        let e = this.links.get(id);
+        const ch = [e];
+        while (e.parentId)
+        {
+            ch.unshift(e);
+        }
+        return ch;
+    }
+}
+
+export class XLINK
+{
+    rlink: Link[]
+
+    constructor(
+        public readonly id: string,
+        public readonly length: Value[],
+        public readonly angle: Value[],
+        public readonly parentId?: string
+    ) {
+        /* ... */
+    }
+}
 export class Link
 {
     constructor(
-            public readonly r: number,
-            public readonly connection: Link|Base,
-            public readonly name?: string,
-            public w?: () => number) {
+        public readonly id: string,
+        public readonly parentId?: string,
+        public readonly length?: Value,
+        public readonly angle?: Value
+    ) {
     }
-}
 
-// bases are a sole point in space. They do not need a connector, they are the connectors.
-export class Base
-{
-    constructor(
-        public readonly x: number,
-        public readonly y: number,
-        public readonly connection?: Link|Base) {
-    }
-}
-
-// a mechanism is a combination of bases and links.
-export class Mechanism
-{
-    readonly loops: Link[][][] = [];
-    readonly vars: Link[];
-    constructor(readonly links: Link[],readonly connections: Link[][])
+    invert(): Link
     {
-        // filter for all elements who have no connector
-        const heads = links.filter((link) => {
-            return !links.some((l) => l.connection === link);
-        });
-        // generate the tail for each head
-        const preloops: Link[][] = [];
-        heads.forEach((head) => {
-                const end = preloops.push([head]) - 1;
-                for (let l = head; l.connection instanceof Link; l = l.connection)
-                {
-                    preloops[end].unshift(l.connection);
-                }
-        });
-        // identify the unknown values:
-        this.vars = links.filter((l) => !l.w);
-        // closed integral conditions for the mechanism
-        connections.forEach((con) => {
-            // create a loop for each connection
-            const idx = this.loops.push([]) - 1;
-            const loop = this.loops[idx];
-            // define the positive part of this equation
-            preloops.forEach((l) => {
-                const c0 = l.indexOf(con[0]) + 1;
-                const c1 = l.indexOf(con[1]) + 1;
-                if(c0)
-                {
-                    loop[0] = l.slice(0,c0);
-                }
-                else if(c1)
-                {
-                    loop[1] = l.slice(0,c1);
-                }
-            });
-            // get missing Link from Bases
-            const dy = (loop[1][0].connection as Base).y - (loop[0][0].connection as Base).y;
-            const dx = (loop[1][0].connection as Base).x - (loop[0][0].connection as Base).x;
-            loop[1].unshift(
-                new Link(
-                    Math.hypot(dx,dy),
-                    loop[0][0],
-                    'bs',
-                    () => Math.atan2(dy,dx)
-                )
-            );
-        });
+        return new Link(this.id, this.parentId,
+            this.length
+                ? new Value((...args: Link[]) => -this.length.val(...args), this.length.argIds.slice())
+                : undefined,
+            this.angle
+        );
     }
+}
+
+export class Loop extends Array<Link> {
+    constructor(left: Link[], right: Link[])
+    {
+        super(...left, ...right.map(l => l.invert()));
+    }
+}
+
+class LoopVector {
+    q: number[];
+    calc: () => number[];
+    jacobi: () => Matrix;
+    dq: () => number[];
+    constructor(public readonly vector: Loop[]) {}
+}
+
+class Matrix {
+    constructor(public readonly vector: Loop[]) {}
+    // Calculate...
+    // ...inverse Matrix
+    inv: () => Matrix;
+    // ...determinant
+    private det: () => number;
+    // ... adjugate Matrix
+    private adj: () => Matrix;
+
+    times_a_vector: (vector: LoopVector) => number[];
 }
 
 export class Solver {
-    unknown: number[] = [];
-    readonly eqs: number[] = [];
-    readonly eqs_strings: string[];
-    jacobi_strings: string[][] = [];
-    jacobi: number[][] = [];
-    q: number[];
-    constructor(public mec: Mechanism) {
-        mec.vars.forEach(() => this.unknown.push(Math.random()*tau));
+    q_i: number[] = [];
+    Phi: LoopVector;
 
-        // For testing purposes => [0,333.4349488,206.4349488,135]
-        //this.unknown = [0,300.4349488,206.4349488,135];
-        //this.unknown = this.unknown.map((v) => v *= Math.PI/180);
 
-        mec.vars.map((v,idx) => {
-            v.w = () => this.unknown[idx];
-        });
-        // prepare the equation system for the jacobi matrix
-        // @ts-ignore
-        [this.eqs, this.eqs_strings] = (() => {
-            const str: string[] = [];
-            const val: number[] = [];
-            mec.loops.forEach((loop) => {
-                let sin_str = ''
-                let cos_str = '';
-                let sin_val = 0;
-                let cos_val = 0;
-                loop.forEach((side, idx) => {
-                    const sign = (idx ? ' - ' : ' + ' );
-                    const signv = (idx ? -1 : 1);
-                    side.forEach((link) => {
-                        sin_str += sign + `${link.r} * sin(${link.name})`;
-                        cos_str += sign + `${link.r} * cos(${link.name})`;
-                        sin_val += link.r * Math.sin(link.w()) * signv;
-                        cos_val += link.r * Math.cos(link.w()) * signv;
-                    });
-                });
-                str.push(sin_str, cos_str);
-                val.push(sin_val, cos_val);
-            });
-            return [val, str];
-        })();
-    }
-    // create the jacobi matrix
-    calc = () => {
-        this.jacobi = [];
-        this.jacobi_strings = [];
-        this.eqs_strings.forEach((eq,idx) => {
-            this.jacobi_strings.push([]);
-            this.mec.vars.forEach((v) => {
-                this.jacobi_strings[idx].push(
-                    math.derivative(eq, v.name)
-                        .toString()
-                        .replace(v.name, v.w().toString())
-                );
+    constructor(public loops: Loop[]) {
+        const vars = loops.map((loop) => {
+            loop.filter((link) => {
+                !(link.angle || link.length)
             })
-        });
-        this.jacobi_strings.forEach((col,idx) => {
-            this.jacobi.push([]);
-            col.forEach((row) => {
-                this.jacobi[idx].push(math.eval(row));
-            });
-        });
-        //this.q = math.multiply(this.eqs, math.inv(math.transpose(this.jacobi))) as number[];
-        this.q = [];
-        //@ts-ignore
-        const tst: number[][] = math.inv(this.jacobi);
-        tst.forEach((row) => {
-            let val = 0;
-            row.forEach((col,idx) => {
-                val += col * this.eqs[idx];
-            });
-            this.q.push(-val);
-        })
-        this.unknown = this.unknown.map((val, idx) => {
-            return (val + this.q[idx]/100 ) % tau;
-        });
+        }).flat();
+
+        // calculation is something like this:
+        this.q_i = vars.map((val) => Math.random());
+        this.Phi = new LoopVector(loops);
+        const jacobi: Matrix = this.Phi.jacobi();
+        const inv_jacobi = jacobi.inv();
+        this.q_i = inv_jacobi.times_a_vector(this.Phi);
     }
 }
