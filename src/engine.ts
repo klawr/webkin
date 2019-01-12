@@ -1,27 +1,23 @@
-import { type } from "os";
 
-export class Value
-{
-    constructor(
-        readonly val: (...args: Link[]) => number,
-        readonly argIds: string[] = []
-    ) {
-    }
-}
+type JointId = [string, number];
 
 export class Mechanism
 {
     readonly links = new Map<string, Link>();
 
     constructor() {}
-    defineLink(id: string, params: { length?: Value | number, angle?: Value | number, parentId?: string } = {}): Mechanism
+    defineLink(id: string, params: {
+        length?: number[] | number,
+        relAngles?: number[],
+        absAngle?: number,
+        joint?: JointId } = {}): Mechanism
     {
-        let l = new Link(id, params.parentId, params.length, params.angle);
+        let l = new Link(id, params.joint, params.length, params.relAngles, params.absAngle);
         this.links.set(id, l);
         return this;
     }
 
-    extractLoop(leftId: string, rightId: string)
+    extractLoop(leftId: JointId, rightId: JointId)
     {
         const left = this.buildChain(leftId);
         const right = this.buildChain(rightId);
@@ -29,61 +25,122 @@ export class Mechanism
         return new Loop(left, right);
     }
 
-    private buildChain(id: string)
+    private buildChain(id: JointId)
     {
-        let e = this.links.get(id);
-        const ch = [e];
-        while (e.parentId)
+        let e = this.links.get(id[0]);
+        let mp = e.points[id[1]];
+        const s = [new Variable(id[0], mp.angleOffset, e.absAngle, mp.length)];
+        while (id = e.joint)
         {
-            ch.unshift(e);
+            e = this.links.get(id[0]);
+            mp = e.points[id[1]];
+            s.unshift(new Variable(id[0], mp.angleOffset, e.absAngle, mp.length));
         }
-        return ch;
+        return s;
     }
 }
 
-export class XLINK
+export class Mountpoint
 {
-    rlink: Link[]
-
     constructor(
-        public readonly id: string,
-        public readonly length: Value[],
-        public readonly angle: Value[],
-        public readonly parentId?: string
+        public readonly length?: number,
+        public readonly angleOffset: number = 0
     ) {
-        /* ... */
     }
 }
+
 export class Link
 {
-    public readonly length?: Value;
-    public readonly angle?: Value;
+    public readonly joint?: JointId;
+    public readonly points = [] as Mountpoint[];
+    public readonly length: number[];
+    public readonly relAngles: number[];
 
     constructor(
         public readonly id: string,
-        public readonly parentId?: string,
-        length?: Value | number,
-        angle?: Value | number
+        joint?: string | JointId,
+        length?: number[] | number,
+        relAngles?: number[],
+        public readonly absAngle?: number
     ) {
-        this.length = typeof length === 'number' ? new Value(() => length) : length;
-        this.angle = typeof angle === 'number' ? new Value(() => angle) : angle;
-    }
+        if (typeof joint === 'undefined')
+        {
+            this.joint = undefined;
+        }
+        else if (typeof joint === 'string')
+        {
+            this.joint = [ joint, 0 ];
+        }
+        else
+        {
+            this.joint = joint.slice() as JointId;
+        }
 
-    invert(): Link
-    {
-        return new Link(this.id, this.parentId,
-            this.length
-                ? new Value((...args: Link[]) => -this.length.val(...args), this.length.argIds.slice())
-                : undefined,
-            this.angle
-        );
+        if (typeof length === 'undefined')
+        {
+            this.length = [];
+        }
+        else
+        {
+            if (typeof length === 'number')
+            {
+                this.length = [ length ];
+            }
+            else
+            {
+                this.length = length.slice();
+            }
+            this.relAngles = typeof relAngles === 'object' ? relAngles.slice() : [];
+            if (this.length.length)
+            {
+                if (this.relAngles.length !== this.length.length - 1)
+                {
+                    throw new Error("angles.length !== length.length - 1");
+                }
+                this.points.push(new Mountpoint(this.length[0]));
+                let gammaOffset = 0;
+                for (let i = 1; i < this.length.length; ++i)
+                {
+                    const a = this.points[i-1].length;
+                    const b = this.length[i];
+                    const gamma = this.relAngles[i-1] - gammaOffset;
+
+                    const c = Math.sqrt(a * a + b * b + Math.sin(gamma) * 2 * a * b);
+                    const beta = Math.sin(gamma) * b / c;
+                    const alpha = Math.sin(gamma) * a / c;
+
+                    gammaOffset = alpha;
+                    this.points.push(new Mountpoint(c, beta));
+                }
+            }
+        }
     }
 }
 
-export class Loop extends Array<Link> {
-    constructor(left: Link[], right: Link[])
+export class Variable
+{
+
+    constructor(
+        public readonly id: string,
+        public readonly angleOffset: number,
+        public readonly absAngle?: number,
+        public readonly length?: number
+    ) {
+    }
+
+    get isDefined() { return !!this.absAngle; }
+
+    invert()
     {
-        super(...left, ...right.map(l => l.invert()));
+        const nlen = this.length && -this.length
+        return new Variable(this.id, this.angleOffset, this.absAngle, nlen);
+    }
+}
+
+export class Loop extends Array<Variable> {
+    constructor(left: Variable[], right: Variable[])
+    {
+        super(...left, ...right.map(e => e.invert()));
     }
 }
 
@@ -115,8 +172,8 @@ export class Solver {
 
     constructor(public loops: Loop[]) {
         this.vars = loops.map((loop) => {
-            loop.filter((link) => {
-                !(link.angle || link.length)
+            loop.filter((vars) => {
+                !(vars.absAngle === undefined || vars.length === undefined)
             })
         }).flat();
 
