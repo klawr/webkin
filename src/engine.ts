@@ -1,3 +1,4 @@
+import { stringify } from "querystring";
 
 type JointId = [string, number];
 
@@ -119,7 +120,6 @@ export class Link
 
 export class Variable
 {
-
     constructor(
         public readonly id: string,
         public readonly angleOffset: number,
@@ -128,7 +128,7 @@ export class Variable
     ) {
     }
 
-    get isDefined() { return !!this.absAngle; }
+    get isUndefined() { return this.absAngle === undefined || this.length === undefined; }
 
     invert()
     {
@@ -144,16 +144,8 @@ export class Loop extends Array<Variable> {
     }
 }
 
-class LoopVector {
-    q: number[];
-    calc: () => number[];
-    jacobi: () => Matrix;
-    dq: () => number[];
-    constructor(public readonly vector: Loop[]) {}
-}
-
 class Matrix {
-    constructor(public readonly vector: Loop[]) {}
+    constructor(public readonly vector: number[][]) {}
     // Calculate...
     // ...inverse Matrix
     inv: () => Matrix;
@@ -161,27 +153,69 @@ class Matrix {
     private det: () => number;
     // ... adjugate Matrix
     private adj: () => Matrix;
-
-    times_a_vector: (vector: LoopVector) => number[];
 }
 
 export class Solver {
-    q_i: number[] = [];
-    Phi: LoopVector;
-    vars: Loop[];
+    vars: Set<string>;
 
-    constructor(public loops: Loop[]) {
-        this.vars = loops.map((loop) => {
-            loop.filter((vars) => {
-                !(vars.absAngle === undefined || vars.length === undefined)
+    constructor(public readonly loops: Loop[]) {
+        this.vars = new Set<string>();
+        loops.forEach((loop) => {
+            loop.forEach((v) => {
+                if (v.isUndefined) {
+                    this.vars.add(v.id);
+                }
             })
-        }).flat();
-
-        // calculation is something like this:
-        this.q_i = this.vars.map((val) => Math.random());
-        this.Phi = new LoopVector(loops);
-        const jacobi: Matrix = this.Phi.jacobi();
-        const inv_jacobi = jacobi.inv();
-        this.q_i = inv_jacobi.times_a_vector(this.Phi);
+        });
     }
+
+    solve = function* solve(): IterableIterator<Map<string, number>> {
+        let q_i = new Map([...this.vars].map(v => [v, Math.random()] as [string, number]));
+        const Phi = this.solvePhi(this.q_i);
+        const jacobi = this.jacobi(this.q_i).inv();
+
+        while (true)
+        {
+            yield q_i;
+        }
+    }
+
+    solvePhi(q: Map<string, number>): number[]
+    {
+        const accessOrResolve = (id: string, value?: number) => value === undefined ? q.get(id) : value;
+
+        return this.loops.flatMap((row) =>
+            row.map((link) => [ accessOrResolve(link.id, link.length), accessOrResolve(link.id, link.absAngle) + link.angleOffset ])
+               .map((cell) => [ cell[0] * Math.cos(cell[1]), cell[0] * Math.sin(cell[1]) ])
+               .reduce((l, r) => [ l[0] + r[0], l[1] + r[1] ]));
+    }
+    jacobi(q: Map<string, number>): Matrix
+    {
+        return new Matrix(this.loops.flatMap((row) => {
+            const q_ = [...q].map(qj => ({ id: qj[0], value: qj[1] }));
+            const ex = [] as number[];
+            const ey = [] as number[];
+            q_.forEach(qj => {
+                const v = row.find((vi) => vi.id === qj.id);
+                if (v)
+                {
+                    if (v.absAngle === undefined)
+                    {
+                        ex.push(-v.length * Math.sin(qj.value + v.angleOffset));
+                        ey.push(+v.length * Math.cos(qj.value + v.angleOffset));
+                    } else {
+                        ex.push(Math.cos(v.absAngle + v.angleOffset));
+                        ey.push(Math.sin(v.absAngle + v.angleOffset));
+                    }
+                }
+                else
+                {
+                    ex.push(0);
+                    ey.push(0);
+                }
+            })
+            return [ex, ey];
+        }));
+    }
+    dq: () => number[];
 }
