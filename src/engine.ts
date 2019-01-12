@@ -1,5 +1,4 @@
-
-const tau = 2* Math.PI; // just because
+import { type } from "os";
 
 export class Value
 {
@@ -15,11 +14,11 @@ export class Mechanism
     readonly links = new Map<string, Link>();
 
     constructor() {}
-    defineLink(id: string, params: { length?: Value, angle?: Value, parentId?: string } = {}): Link
+    defineLink(id: string, params: { length?: Value | number, angle?: Value | number, parentId?: string } = {}): Mechanism
     {
         let l = new Link(id, params.parentId, params.length, params.angle);
         this.links.set(id, l);
-        return l;
+        return this;
     }
 
     extractLoop(leftId: string, rightId: string)
@@ -57,12 +56,17 @@ export class XLINK
 }
 export class Link
 {
+    public readonly length?: Value;
+    public readonly angle?: Value;
+
     constructor(
         public readonly id: string,
         public readonly parentId?: string,
-        public readonly length?: Value,
-        public readonly angle?: Value
+        length?: Value | number,
+        angle?: Value | number
     ) {
+        this.length = typeof length === 'number' ? new Value(() => length) : length;
+        this.angle = typeof angle === 'number' ? new Value(() => angle) : angle;
     }
 
     invert(): Link
@@ -107,17 +111,17 @@ class Matrix {
 export class Solver {
     q_i: number[] = [];
     Phi: LoopVector;
-
+    vars: Loop[];
 
     constructor(public loops: Loop[]) {
-        const vars = loops.map((loop) => {
+        this.vars = loops.map((loop) => {
             loop.filter((link) => {
                 !(link.angle || link.length)
             })
         }).flat();
 
         // calculation is something like this:
-        this.q_i = vars.map((val) => Math.random());
+        this.q_i = this.vars.map((val) => Math.random());
         this.Phi = new LoopVector(loops);
         const jacobi: Matrix = this.Phi.jacobi();
         const inv_jacobi = jacobi.inv();

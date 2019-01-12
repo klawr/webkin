@@ -1,5 +1,5 @@
 
-import { fourbar } from './stephenson2';
+import { stephenson2 } from './stephenson2';
 import {  Link, Loop, Mechanism } from './engine';
 
 
@@ -14,7 +14,7 @@ const cv = document.body.appendChild((() => {
 })());
 const ctx = cv.getContext('2d');
 
-const steph = fourbar;
+const steph = stephenson2;
 
 // g should be g2
 function draw(mec: Mechanism,g: any) {
