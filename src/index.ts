@@ -1,6 +1,6 @@
 
 import { stephenson2 } from './stephenson2';
-import {  Link, Loop, Mechanism } from './engine';
+import {  Mechanism } from './engine';
 
 
 const g2 = require('g2d/src/g2.js');

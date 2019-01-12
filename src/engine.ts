@@ -10,7 +10,7 @@ export class Mechanism
         length?: number[] | number,
         relAngles?: number[],
         absAngle?: number,
-        joint?: JointId } = {}): Mechanism
+        joint?: string | JointId } = {}): Mechanism
     {
         let l = new Link(id, params.joint, params.length, params.relAngles, params.absAngle);
         this.links.set(id, l);
