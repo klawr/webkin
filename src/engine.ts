@@ -1,4 +1,3 @@
-import { stringify } from "querystring";
 
 type JointId = [string, number];
 
@@ -140,25 +139,64 @@ export class Variable
 export class Loop extends Array<Variable> {
     constructor(left: Variable[], right: Variable[])
     {
-        super(...left, ...right.map(e => e.invert()));
+        super(...left, ...right.map((e) => e.invert()));
     }
 }
 
-class Matrix {
-    constructor(public readonly vector: number[][]) {}
-    // Calculate...
-    // ...inverse Matrix
-    inv: () => Matrix;
-    // ...determinant
-    private det: () => number;
-    // ... adjugate Matrix
-    private adj: () => Matrix;
+class Matrix extends Array<Array<number>> {
+    constructor(public readonly val: number[][]) {
+        super();
+    }
+    inv(): Matrix
+    {
+        return new Matrix(this.adj().map((row) => row.map((col) => col / this.det())));
+    };
+    private det(): number
+    {
+        const len = this.val.length;
+        let sum = 0;
+        for (let i = 0; i < len; ++i) {
+            let prod = 1;
+            for (let j = 0; j < len; ++j) {
+                prod *= this.val[j][(i+j)%len];
+            }
+            sum += prod;
+        }
+        for (let i = len - 1; i >= 0; --i) {
+            let prod = 1;
+            for (let j = 0; j < len; ++j) {
+                prod *= this.val[j][(len+i-j)%len]
+            }
+            sum -= prod;
+        }
+        return sum;
+    };
+    private adj(): Matrix
+    {
+        const len = this.val.length;
+        const adj = [] as number[][];
+        for (let i = 0; i < len; ++i) {
+            for (let j = 0; i < len; ++j) {
+                adj[j][i] = this.minor(i,j).det() * (i+j) % 2 ? 1 : -1;
+            }
+        }
+        return new Matrix(adj);
+    };
+
+    private minor(i: number,j: number): Matrix
+    {
+        let minor = this.val.slice();
+        minor.splice(i, 1)
+        minor.forEach((col) => col.splice(j,1));
+        return new Matrix(minor);
+    }
 }
 
 export class Solver {
     vars: Set<string>;
 
-    constructor(public readonly loops: Loop[]) {
+    constructor(public readonly loops: Loop[])
+    {
         this.vars = new Set<string>();
         loops.forEach((loop) => {
             loop.forEach((v) => {
@@ -169,13 +207,22 @@ export class Solver {
         });
     }
 
-    solve = function* solve(): IterableIterator<Map<string, number>> {
-        let q_i = new Map([...this.vars].map(v => [v, Math.random()] as [string, number]));
-        const Phi = this.solvePhi(this.q_i);
-        const jacobi = this.jacobi(this.q_i).inv();
+    solve = function* solve(): IterableIterator<Map<string, number>>
+    {
+        let q_i = new Map([...this.vars].map((v) => [v, Math.random()] as [string, number]));
+        const Phi = this.solvePhi(q_i) as number[];
+        const jacobi = this.jacobi(q_i).inv() as Matrix;
 
         while (true)
         {
+            const dq: number[] = jacobi.map((col) => {
+                return col.reduce((acc, cur, idx) => {
+                    return acc += cur * Phi[idx];
+                });
+            });
+            q_i = new Map([...q_i].map((val, idx) => {
+                return [val[0], val[1] + dq[idx]] as [string, number]
+            }));
             yield q_i;
         }
     }
@@ -192,10 +239,10 @@ export class Solver {
     jacobi(q: Map<string, number>): Matrix
     {
         return new Matrix(this.loops.flatMap((row) => {
-            const q_ = [...q].map(qj => ({ id: qj[0], value: qj[1] }));
+            const q_ = [...q].map((qj) => ({ id: qj[0], value: qj[1] }));
             const ex = [] as number[];
             const ey = [] as number[];
-            q_.forEach(qj => {
+            q_.forEach((qj) => {
                 const v = row.find((vi) => vi.id === qj.id);
                 if (v)
                 {
