@@ -4,3 +4,4 @@ docs
 dist
 package*
 yarn*
+.vscode

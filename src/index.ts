@@ -1,6 +1,6 @@
 
-import { stephenson2 } from './stephenson2';
-import {  Mechanism } from './engine';
+import { stephenson2, solver, fourlver, fourbar } from './stephenson2';
+import { render } from './render';
 
 
 const g2 = require('g2d/src/g2.js');
@@ -9,22 +9,17 @@ const cv = document.body.appendChild((() => {
     const cv = document.createElement('canvas') as HTMLCanvasElement;
     cv.id = 'cv';
     cv.width= 1000;
-    cv.height= 500;
+    cv.height= 1000;
     return cv;
 })());
 const ctx = cv.getContext('2d');
 
-const steph = stephenson2;
-
-// g should be g2
-function draw(mec: Mechanism,g: any) {
-}
-
-(function render() {
-    g2().clr()
-        .view({cartesian:true, x: 50, y:300})
-        .grid()
-        .ins((k: any) => {draw(steph, k)}).exe(ctx);
-    requestAnimationFrame(render);
+const iter = solver.solve();
+(function renderLoop() {
+    const rx = iter.next();
+    render(stephenson2, rx.value, ctx);
+    if (!rx.done)
+    {
+        requestAnimationFrame(renderLoop);
+    }
 })();
-

@@ -21,7 +21,6 @@ export class Mechanism
     {
         const left = this.buildChain(leftId);
         const right = this.buildChain(rightId);
-
         return new Loop(left, right);
     }
 
@@ -99,15 +98,16 @@ export class Link
                 }
                 this.points.push(new Mountpoint(this.length[0]));
                 let gammaOffset = 0;
+                let beta = 0;
                 for (let i = 1; i < this.length.length; ++i)
                 {
                     const a = this.points[i-1].length;
                     const b = this.length[i];
                     const gamma = this.relAngles[i-1] - gammaOffset;
 
-                    const c = Math.sqrt(a * a + b * b + Math.sin(gamma) * 2 * a * b);
-                    const beta = Math.sin(gamma) * b / c;
-                    const alpha = Math.sin(gamma) * a / c;
+                    const c = Math.sqrt(a * a + b * b - Math.cos(gamma) * 2 * a * b);
+                    beta += Math.asin(Math.sin(gamma) * b / c);
+                    const alpha = Math.sin(Math.sin(gamma) * a / c);
 
                     gammaOffset = alpha;
                     this.points.push(new Mountpoint(c, beta));
@@ -137,19 +137,19 @@ export class Variable
 }
 
 export class Loop extends Array<Variable> {
-    constructor(left: Variable[], right: Variable[])
+    constructor(left: Variable[], right?: Variable[])
     {
         super(...left, ...right.map((e) => e.invert()));
     }
 }
 
-class Matrix extends Array<Array<number>> {
+class Matrix {
     constructor(public readonly val: number[][]) {
-        super();
     }
     inv(): Matrix
     {
-        return new Matrix(this.adj().map((row) => row.map((col) => col / this.det())));
+        const det = this.det();
+        return new Matrix(this.adj().val.map((row) => row.map((col) => col / det)));
     };
     private det(): number
     {
@@ -174,10 +174,10 @@ class Matrix extends Array<Array<number>> {
     private adj(): Matrix
     {
         const len = this.val.length;
-        const adj = [] as number[][];
+        const adj = new Array(len).fill(0).map(() => [] as number[]);
         for (let i = 0; i < len; ++i) {
-            for (let j = 0; i < len; ++j) {
-                adj[j][i] = this.minor(i,j).det() * (i+j) % 2 ? 1 : -1;
+            for (let j = 0; j < len; ++j) {
+                adj[j][i] = this.minor(i,j).det() * ((i+j) % 2 ? 1 : -1);
             }
         }
         return new Matrix(adj);
@@ -185,7 +185,7 @@ class Matrix extends Array<Array<number>> {
 
     private minor(i: number,j: number): Matrix
     {
-        let minor = this.val.slice();
+        let minor = this.val.map(r => r.slice());
         minor.splice(i, 1)
         minor.forEach((col) => col.splice(j,1));
         return new Matrix(minor);
@@ -210,18 +210,19 @@ export class Solver {
     solve = function* solve(): IterableIterator<Map<string, number>>
     {
         let q_i = new Map([...this.vars].map((v) => [v, Math.random()] as [string, number]));
-        const Phi = this.solvePhi(q_i) as number[];
-        const jacobi = this.jacobi(q_i).inv() as Matrix;
 
         while (true)
         {
-            const dq: number[] = jacobi.map((col) => {
+            const Phi = this.solvePhi(q_i) as number[];
+            const jacobi = this.jacobi(q_i).inv() as Matrix;
+
+            const dq: number[] = jacobi.val.map((col) => {
                 return col.reduce((acc, cur, idx) => {
-                    return acc += cur * Phi[idx];
-                });
+                    return acc += -cur * Phi[idx];
+                }, -col[0] * Phi[0]);
             });
             q_i = new Map([...q_i].map((val, idx) => {
-                return [val[0], val[1] + dq[idx]] as [string, number]
+                return [val[0], (val[1] + dq[idx]) % (2 *Math.PI)] as [string, number]
             }));
             yield q_i;
         }
@@ -232,7 +233,7 @@ export class Solver {
         const accessOrResolve = (id: string, value?: number) => value === undefined ? q.get(id) : value;
 
         return this.loops.flatMap((row) =>
-            row.map((link) => [ accessOrResolve(link.id, link.length), accessOrResolve(link.id, link.absAngle) + link.angleOffset ])
+       [...row].map((link) => [ accessOrResolve(link.id, link.length), accessOrResolve(link.id, link.absAngle) + link.angleOffset ])
                .map((cell) => [ cell[0] * Math.cos(cell[1]), cell[0] * Math.sin(cell[1]) ])
                .reduce((l, r) => [ l[0] + r[0], l[1] + r[1] ]));
     }
