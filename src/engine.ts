@@ -146,11 +146,94 @@ export class Loop extends Array<Variable> {
 class Matrix {
     constructor(public readonly val: number[][]) {
     }
+
+    get length() { return this.val.length; }
+
+    static generate(n: number, g: (i: number, j: number) => number) 
+    {
+        const val: number[][] = [];
+        for (let i = 0; i < n; ++i) 
+        {
+            const z = [];
+            for (let j = 0; j < n; ++j)
+            {
+                z.push(g(i, j));
+            }
+            val.push(z);
+        }
+        return new Matrix(val);
+    }
+    static identity(n: number)
+    {
+        return this.generate(n, (i, j) => +(i === j));
+    }
+    copy() 
+    {
+        return new Matrix(this.val.map(e => e.slice()));
+    }
+
+    mult(X: Matrix) 
+    {
+        if (X.length !== this.length)
+        {
+            throw Error("not implemented");
+        }
+        return Matrix.generate(this.length, (i, j) => 
+            this.val[i].reduce(
+                (acc, v_ik, k) => acc + v_ik * X.val[k][j], 
+                this.val[i][0] * X.val[0][j])
+        );
+    }
+
+
     inv(): Matrix
     {
         const det = this.det();
         return new Matrix(this.adj().val.map((row) => row.map((col) => col / det)));
     };
+    private lr(): { L: Matrix, R: Matrix, P: Matrix }
+    {
+        const I = Matrix.identity(this.length);
+
+        const L = I.copy();
+        const R = this.copy();
+        const P: Matrix[] = [];
+        for (let j = 0; j < this.length - 1; ++j)
+        {
+            let jmax = j;
+            for (let i = j+1; i < this.length; ++i)
+            {
+                if (Math.abs(this.val[i][j]) > Math.max(this.val[jmax][j]))
+                {
+                    jmax = i;
+                }
+            }
+
+            const P_j = new Matrix(I.val.slice());
+            P_j.val[j] = I.val[jmax];
+            P_j.val[jmax] = I.val[j];
+            P.unshift(P_j);
+
+            let tmp = L.val[j];
+            L.val[j] = L.val[jmax];
+            L.val[jmax] = tmp;
+            tmp = R.val[j];
+            R.val[j] = R.val[jmax];
+            R.val[jmax] = R.val[j];
+
+            for (let i = j + 1; i < this.length; ++i)
+            {
+                L.val[i][j] = R.val[i][j] / R.val[j][j];
+                for (let k = j; k < this.length; ++k)
+                {
+                    R.val[i][k] = R.val[i][k] - L.val[i][j] * R.val[j][k];
+                }
+            }
+        }
+
+        return {L,R, P: P.reduce((m1, m2) => m1.mult(m2)) };
+    };
+
     private det(): number
     {
         const len = this.val.length;
@@ -222,7 +305,7 @@ export class Solver {
                 }, -col[0] * Phi[0]);
             });
             q_i = new Map([...q_i].map((val, idx) => {
-                return [val[0], (val[1] + dq[idx]) % (2 *Math.PI)] as [string, number]
+                return [val[0], (val[1] + dq[idx] / 50 ) % (2 *Math.PI)] as [string, number]
             }));
             yield q_i;
         }

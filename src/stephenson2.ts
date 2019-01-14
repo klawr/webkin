@@ -1,7 +1,7 @@
 
 import { Mechanism, Solver } from './engine';
 
-let phi = Math.PI/2;
+let phi = Math.PI*3/4;
 
 export const stephenson2 = new Mechanism()
     .defineLink('g0', {length: 300, absAngle: 0})
