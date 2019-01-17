@@ -1,9 +1,9 @@
 import { Mechanism, Link } from "./engine";
-const g2 = require('g2d/src/g2.js');
+import { g2 } from 'g2d';
 
 const background = g2()
     .clr()
-    .grid();
+    .grid({});
 
 type Coords = { readonly x: number, readonly y: number };
 
@@ -18,7 +18,7 @@ export function render(mec: Mechanism, q_i: Map<string, number>, ctx: CanvasRend
         return link.length.length ? link.length[0] : q_i.get(link.id);
     }
 
-    function np(s: Coords, len: number, angle: number) {
+    function newPoint(s: Coords, len: number, angle: number) {
         return {
             x: s.x + len * Math.cos(angle),
             y: s.y + len * Math.sin(angle)
@@ -37,20 +37,23 @@ export function render(mec: Mechanism, q_i: Map<string, number>, ctx: CanvasRend
         }
 
         const angle = getAngle(link);
-        const pts: Coords[] = [start, np(start, getFirstLength(link), angle)];
+        const pts: Coords[] = [start, newPoint(start, getFirstLength(link), angle)];
 
         for (let i = 1; i < link.points.length; ++i)
         {
             const p = link.points[i];
-            pts.push(np(start, p.length, angle + p.angleOffset));
+            pts.push(newPoint(start, p.length, angle + p.angleOffset));
         }
 
-        rcmds.ply({pts, closed: true}).txt({...pts[0], str:link.id})
+        // @ts-ignore
+        rcmds.link2({pts, closed: true});//.txt({...pts[0], str:link.id})
         const mounts = pts.slice(1);
         marked.set(link.id, mounts);
         return mounts;
     }
 
     mec.links.forEach(renderLink);
+    rcmds.gnd({});
+    marked.forEach((m) => m.forEach(c => rcmds.nod(c)));
     rcmds.exe(ctx);
 }
