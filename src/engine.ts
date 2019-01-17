@@ -97,6 +97,7 @@ export class Link
 
         if (typeof length === 'undefined')
         {
+            this.points.push(new Mountpoint());
             this.length = [];
         }
         else
@@ -454,7 +455,7 @@ export class Solver {
             }
 
             q_i = new Map([...q_i].map((val, idx) => {
-                return [val[0], (val[1] + dq[idx]) % (2 *Math.PI)] as [string, number]
+                return [val[0], val[1] + dq[idx]] as [string, number]
             }));
             if (i % 100 === 99)
             {

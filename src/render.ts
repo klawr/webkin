@@ -7,7 +7,7 @@ const background = g2()
 
 type Coords = { readonly x: number, readonly y: number };
 
-export function render(mec: Mechanism, q_i: Map<string, number>, ctx: CanvasRenderingContext2D) {
+export function render(mec: Mechanism, q_i: Map<string, number>, ctx: RenderingContext) {
     const rcmds = g2().view({x:300,y:600,cartesian:true}).use({grp: background});
     const marked = new Map<string, Coords[]>();
 
@@ -15,7 +15,7 @@ export function render(mec: Mechanism, q_i: Map<string, number>, ctx: CanvasRend
         return link.absAngle === undefined ? q_i.get(link.id) : link.absAngle;
     }
     function getFirstLength(link: Link) {
-        return link.length.length ? link.length[0] : q_i.get(link.id);
+        return link.length.length ? link.length[0] : -q_i.get(link.id);
     }
 
     function newPoint(s: Coords, len: number, angle: number) {

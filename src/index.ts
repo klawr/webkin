@@ -25,10 +25,12 @@ if (true)
 }
 else
 {
-    const iter = solver.solve();
+    const iter = fourlver.solve();
+    // const iter = solver.solve();
     (function renderLoop() {
         const rx = iter.next();
-        render(stephenson2, rx.value, ctx);
+        render(fourbar, rx.value, ctx);
+        // render(stephenson2, rx.value, ctx);
         if (!rx.done)
         {
             requestAnimationFrame(renderLoop);
