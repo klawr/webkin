@@ -207,17 +207,52 @@ export class Matrix {
     xy(b: number[]): number[]
     {
         const {L,R,P} = this.lr();
-        let y: number[] = [];
-        for (let i = 0; i < b.length; ++i)
+
+        function generate(n: number, g: (i: number, data: number[]) => number)
         {
-            y.push((b[i] - y.reduce((acc, yk, k) => acc + L.val[i][k] * yk, 0)) / L.val[i][i]);
+            const val: number[] = [];
+            for (let i = 0; i < n; ++i)
+            {
+                val.push(g(i, val));
+            }
+            return val;
         }
-        y = y.map((_,i) => y[P.val[i].findIndex((_) => _ === 1)]);
-        const x: number[] = [];
-        for (let i = 0; i < b.length; ++i)
+        function generateReverse(n: number, g: (i: number, data: number[]) => number)
         {
-            x.push((y[i]   - x.reduce((acc, xk, k) => acc + R.val[i][k] * xk, 0)) / R.val[i][i]);
+            const val: number[] = [];
+            for (let i = n - 1; i >= 0; --i)
+            {
+                val.unshift(g(i, val));
+            }
+            return val;
         }
+        function mult(A: Matrix, b: number[])
+        {
+            return generate(A.length, (i) =>
+                A.val[i].reduce((acc, v_ik, k) => acc + v_ik * b[k], 0)
+            );
+        }
+
+        b = mult(P, b);
+
+        const y = generate(this.length, (i, data) => {
+            let acc = b[i];
+            for (let k = 0; k < i; ++k)
+            {
+                acc -= L.val[i][k] * data[k];
+            }
+            return acc / L.val[i][i];
+        });
+
+        const x = generateReverse(this.length, (i, data) => {
+            let acc = y[i];
+            for (let k = 1; k < data.length; ++k)
+            {
+                acc -= R.val[i][k+i] * data[k];
+            }
+            return - (acc / R.val[i][i]);
+        });
+
         return x;
     }
 
@@ -259,7 +294,7 @@ export class Matrix {
             }
             return acc / L.val[i][i];
         });
-        
+
         const X = Matrix.generateReverse(this.length, (i ,j , data) => {
             let acc = Y.val[i][j];
             for (let k = 1; k < data.length; ++k)
@@ -268,7 +303,7 @@ export class Matrix {
             }
             return acc / R.val[i][i];
         });
-        
+
         return X;
     }
     lr(): { L: Matrix, R: Matrix, P: Matrix }
@@ -382,30 +417,53 @@ export class Solver {
                 if (v.isUndefined) {
                     this.vars.add(v.id);
                 }
-            })
+            });
         });
     }
 
     solve = function* solve(): IterableIterator<Map<string, number>>
     {
-        let q_i = new Map([...this.vars].map((v) => [v, Math.random()] as [string, number]));
+        const rnd = () => new Map([...this.vars].map((v) => [v, Math.random()] as [string, number]));
+        let q_i = rnd();
 
         let i = 0;
         while (true)
         {
-            const Phi = this.solvePhi(q_i) as number[];
+            const Phi = this.solvePhi(q_i);
 
-            const jacobi = this.jacobi(q_i).invLR() as Matrix;
-
-            const dq: number[] = jacobi.val.map((col) => {
-               return col.reduce((acc, cur, idx) => acc -(cur * Phi[idx]), 0);
-            });
+            const mode: number = 0;
+            let jacobi: Matrix;
+            let dq: number[] ;
+            switch (mode) {
+                case 0:
+                    jacobi = this.jacobi(q_i).invLR();
+                    dq = jacobi.val.map((col) => {
+                        return col.reduce((acc, cur, idx) => acc -(cur * Phi[idx]), 0);
+                     });
+                    break;
+                case 1:
+                    jacobi = this.jacobi(q_i).invDet();
+                    dq = jacobi.val.map((col) => {
+                        return col.reduce((acc, cur, idx) => acc -(cur * Phi[idx]), 0);
+                     });
+                    break;
+                default:
+                    jacobi = this.jacobi(q_i);
+                    dq = jacobi.xy(Phi);
+                    break;
+            }
 
             q_i = new Map([...q_i].map((val, idx) => {
-                return [val[0], (val[1] + dq[idx] ) % (2 *Math.PI)] as [string, number]
+                return [val[0], (val[1] + dq[idx]) % (2 *Math.PI)] as [string, number]
             }));
-            if (dq.every((v) => Math.abs(v) < 1e-3) || i > 999)
+            if (i % 100 === 99)
             {
+                console.log(`reroll after ${i} attempts`);
+                q_i = rnd();
+            }
+            else if (dq.every((v) => Math.abs(v) < 1e-3) || i > 1000)
+            {
+                console.log(`finish after ${i} attempts`);
                 return q_i;
             }
             yield q_i;
