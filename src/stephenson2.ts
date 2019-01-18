@@ -1,5 +1,5 @@
 
-import { Solver } from './solver';
+import { xySolver } from './solver';
 import { Mechanism } from './mech';
 
 let phi = Math.PI*1/4;
@@ -19,11 +19,11 @@ export const fourbar = new Mechanism()
     .defineLink('g0', {length:200,absAngle:0})
     .defineLink('b1', {length: 100, joint: 'g0'});
 
-export const solver = new Solver([
+export const solver = xySolver([
     stephenson2.extractLoop(['b1',0],['c1',0]),
     stephenson2.extractLoop(['b2',0],['c1',1])
 ]);
 
-export const fourlver = new Solver([
+export const fourlver = xySolver([
     fourbar.extractLoop(['a1', 0],['b1',0])
 ]);

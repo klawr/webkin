@@ -20,7 +20,7 @@ export class Mechanism
     {
         const left = this.buildChain(leftId);
         const right = this.buildChain(rightId);
-        return new Loop(left, right);
+        return formLoop(left, right);
     }
 
     private buildChain(id: JointId)
@@ -136,9 +136,11 @@ export class Variable
     }
 }
 
-export class Loop extends Array<Variable> {
-    constructor(left: Variable[], right?: Variable[])
-    {
-        super(...left, ...right.map((e) => e.invert()));
-    }
+export interface Loop extends Array<Variable>
+{
+}
+
+function formLoop(left: Variable[], right?: Variable[]): Loop
+{
+    return [...left, ...right.map((e) => e.invert())]
 }

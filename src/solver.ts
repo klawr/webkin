@@ -7,11 +7,11 @@ function nearlyEqual(a:number, b:number, epsilon:number): boolean
     const absB = Math.abs(b);
     const diff = Math.abs(a - b);
 
-    if (a == b)
+    if (a === b)
     { // shortcut, handles infinities
         return true;
     }
-    if (a == 0 || b == 0 || diff < Number.EPSILON)
+    if (a === 0 || b === 0 || diff < Number.EPSILON)
     {
         // a or b is zero or both are extremely close to it
         // relative error is less meaningful here
@@ -21,40 +21,49 @@ function nearlyEqual(a:number, b:number, epsilon:number): boolean
     return diff / (absA + absB) < epsilon;
 }
 
-class Matrix {
-    constructor(public readonly val: number[][]) {
+class Matrix extends Array<number[]> {
+    constructor(content: number[][] | number) {
+        if (typeof content === 'number')
+        {
+            super(content);
+        }
+        else
+        {
+            super(...content);
+            for (let i = 0; i < this.length; ++i)
+            {
+                this[i] = this[i].slice();
+            }
+        }
     }
-
-    get length() { return this.val.length; }
 
     static generate(n: number, g: (i: number, j: number, data: number[][]) => number)
     {
-        const val: number[][] = [];
+        const A = new Matrix(n);
         for (let i = 0; i < n; ++i)
         {
-            const z: number[] = [];
-            val.push(z);
+            const row = A[i] = new Array<number>(n);
             for (let j = 0; j < n; ++j)
             {
-                z.push(g(i, j, val));
+                row[j] = g(i, j, A);
             }
         }
-        return new Matrix(val);
+        return A;
     }
 
     static generateReverse(n: number, g: (i: number, j: number, data: number[][]) => number)
     {
-        const val: number[][] = [];
+        const A = new Matrix(n);
         for (let i = n - 1; i >= 0; --i)
         {
-            const z: number[] = [];
-            val.unshift(z);
+            const row = A[i] = new Array<number>(n);
+            A.unshift(row);
             for (let j = n - 1; j >= 0; --j)
             {
-                z.unshift(g(i, j, val));
+                row[j] = g(i, j, A);
             }
         }
-        return new Matrix(val);
+        return A;
     }
 
     static identity(n: number)
@@ -87,7 +96,7 @@ class Matrix {
         function mult(A: Matrix, b: number[])
         {
             return generate(A.length, (i) =>
-                A.val[i].reduce((acc, v_ik, k) => acc + v_ik * b[k], 0)
+                A[i].reduce((acc, v_ik, k) => acc + v_ik * b[k], 0)
             );
         }
 
@@ -97,26 +106,21 @@ class Matrix {
             let acc = b[i];
             for (let k = 0; k < i; ++k)
             {
-                acc -= L.val[i][k] * data[k];
+                acc -= L[i][k] * data[k];
             }
-            return acc / L.val[i][i];
+            return acc / L[i][i];
         });
 
         const x = generateReverse(this.length, (i, data) => {
             let acc = y[i];
             for (let k = 1; k < data.length; ++k)
             {
-                acc -= R.val[i][k+i] * data[k];
+                acc -= R[i][k+i] * data[k];
             }
-            return - (acc / R.val[i][i]);
+            return - (acc / R[i][i]);
         });
 
         return x;
-    }
-
-    copy()
-    {
-        return new Matrix(this.val.map(e => e.slice()));
     }
 
     mult(X: Matrix)
@@ -126,40 +130,43 @@ class Matrix {
             throw Error("not implemented");
         }
         return Matrix.generate(this.length, (i, j) =>
-            this.val[i].reduce((acc, v_ik, k) => acc + v_ik * X.val[k][j], 0)
+            this[i].reduce((acc, v_ik, k) => acc + v_ik * X[k][j], 0)
         );
     }
 
     transpose()
     {
-        return new Matrix(this.val.map(x => x.slice().reverse()).reverse());
+        const cpy = new Matrix(this);
+        cpy.forEach(l => l.reverse());
+        cpy.reverse();
+        return cpy;
     }
 
     invDet(): Matrix
     {
         const det = this.det();
-        return new Matrix(this.adj().val.map((row) => row.map((col) => col / det)));
+        return new Matrix(this.adj().map((row) => row.map((col) => col / det)));
     }
     invLR(): Matrix
     {
         const {L,R,P} = this.lr();
 
         const Y = Matrix.generate(this.length, (i, j, data) => {
-            let acc = P.val[i][j];
+            let acc = P[i][j];
             for (let k = 0; k < i; ++k)
             {
-                acc -= L.val[i][k] * data[k][j];
+                acc -= L[i][k] * data[k][j];
             }
-            return acc / L.val[i][i];
+            return acc / L[i][i];
         });
 
         const X = Matrix.generateReverse(this.length, (i ,j , data) => {
-            let acc = Y.val[i][j];
+            let acc = Y[i][j];
             for (let k = 1; k < data.length; ++k)
             {
-                acc -= R.val[i][k+i] * data[k][j];
+                acc -= R[i][k+i] * data[k][j];
             }
-            return acc / R.val[i][i];
+            return acc / R[i][i];
         });
 
         return X;
@@ -168,9 +175,9 @@ class Matrix {
     {
         const I = Matrix.identity(this.length);
 
-        const CX = this.val.slice();
+        const CX = this.slice();
         const L = Matrix.generate(this.length, () => 0);
-        const R = this.copy();
+        const R = new Matrix(this);
         const P: Matrix[] = [];
         for (let j = 0; j < this.length; ++j)
         {
@@ -183,19 +190,19 @@ class Matrix {
                 }
             }
 
-            const P_j = I.copy();
-            P_j.val[j] = I.val[jmax];
-            P_j.val[jmax] = I.val[j];
+            const P_j = new Matrix(I);
+            P_j[j] = I[jmax];
+            P_j[jmax] = I[j];
             P.unshift(P_j);
 
-            let tmp = L.val[j];
-            L.val[j] = L.val[jmax];
-            L.val[jmax] = tmp;
-            L.val[j][j] = 1;
+            let tmp = L[j];
+            L[j] = L[jmax];
+            L[jmax] = tmp;
+            L[j][j] = 1;
 
-            tmp = R.val[j];
-            R.val[j] = R.val[jmax];
-            R.val[jmax] = tmp;
+            tmp = R[j];
+            R[j] = R[jmax];
+            R[jmax] = tmp;
 
             tmp = CX[j]
             CX[j] = CX[jmax];
@@ -203,10 +210,10 @@ class Matrix {
 
             for (let i = j + 1; i < this.length; ++i)
             {
-                L.val[i][j] = R.val[i][j] / R.val[j][j];
+                L[i][j] = R[i][j] / R[j][j];
                 for (let k = j; k < this.length; ++k)
                 {
-                    R.val[i][k] = R.val[i][k] - L.val[i][j] * R.val[j][k];
+                    R[i][k] = R[i][k] - L[i][j] * R[j][k];
                 }
             }
         }
@@ -216,19 +223,19 @@ class Matrix {
 
     private det(): number
     {
-        const len = this.val.length;
+        const len = this.length;
         let sum = 0;
         for (let i = 0; i < len; ++i) {
             let prod = 1;
             for (let j = 0; j < len; ++j) {
-                prod *= this.val[j][(i+j)%len];
+                prod *= this[j][(i+j)%len];
             }
             sum += prod;
         }
         for (let i = len - 1; i >= 0; --i) {
             let prod = 1;
             for (let j = 0; j < len; ++j) {
-                prod *= this.val[j][(len+i-j)%len]
+                prod *= this[j][(len+i-j)%len]
             }
             sum -= prod;
         }
@@ -236,7 +243,7 @@ class Matrix {
     };
     private adj(): Matrix
     {
-        const len = this.val.length;
+        const len = this.length;
         const adj = new Array(len).fill(0).map(() => [] as number[]);
         for (let i = 0; i < len; ++i) {
             for (let j = 0; j < len; ++j) {
@@ -248,7 +255,7 @@ class Matrix {
 
     private minor(i: number,j: number): Matrix
     {
-        let minor = this.val.map(r => r.slice());
+        let minor = this.map(r => r.slice());
         minor.splice(i, 1)
         minor.forEach((col) => col.splice(j,1));
         return new Matrix(minor);
@@ -256,91 +263,34 @@ class Matrix {
 
     equals(other: Matrix, epsilon: number)
     {
-        return this.val.every((l, i) =>
+        return this.every((l, i) =>
             l.every((c, j) =>
-                nearlyEqual(c, other.val[i][j], epsilon)
+                nearlyEqual(c, other[i][j], epsilon)
             )
         );
     }
 }
 
-export class Solver {
-    vars: Set<string>;
+export type LinSolve = (jacobi: Matrix, q_i: number[]) => number[];
 
-    constructor(public readonly loops: Loop[])
-    {
-        this.vars = new Set<string>();
-        loops.forEach((loop) => {
-            loop.forEach((v) => {
-                if (v.isUndefined) {
-                    this.vars.add(v.id);
-                }
-            });
-        });
-    }
+export function solver(d: LinSolve, loops: Loop[])
+{
+    const vars = new Set<string>(
+        loops.flatMap(loop => loop.filter(v => v.isUndefined).map(v => v.id))
+    );
 
-    solve = function* solve(): IterableIterator<Map<string, number>>
-    {
-        const rnd = () => new Map([...this.vars].map((v) => [v, Math.random()] as [string, number]));
-        let q_i = rnd();
-
-        let i = 0;
-        while (true)
-        {
-            const Phi = this.solvePhi(q_i);
-
-            const mode: number = 0;
-            let jacobi: Matrix;
-            let dq: number[] ;
-            switch (mode) {
-                case 0:
-                    jacobi = this.jacobi(q_i).invLR();
-                    dq = jacobi.val.map((col) => {
-                        return col.reduce((acc, cur, idx) => acc -(cur * Phi[idx]), 0);
-                     });
-                    break;
-                case 1:
-                    jacobi = this.jacobi(q_i).invDet();
-                    dq = jacobi.val.map((col) => {
-                        return col.reduce((acc, cur, idx) => acc -(cur * Phi[idx]), 0);
-                     });
-                    break;
-                default:
-                    jacobi = this.jacobi(q_i);
-                    dq = jacobi.xy(Phi);
-                    break;
-            }
-
-            q_i = new Map([...q_i].map((val, idx) => {
-                return [val[0], val[1] + dq[idx]] as [string, number]
-            }));
-            if (i % 100 === 99)
-            {
-                console.log(`reroll after ${i} attempts`);
-                q_i = rnd();
-            }
-            else if (dq.every((v) => Math.abs(v) < 1e-3) || i > 1000)
-            {
-                console.log(`finish after ${i} attempts`);
-                return q_i;
-            }
-            yield q_i;
-            ++i;
-        }
-    }
-
-    solvePhi(q: Map<string, number>): number[]
+    function solvePhi(q: Map<string, number>): number[]
     {
         const accessOrResolve = (id: string, value?: number) => value === undefined ? q.get(id) : value;
 
-        return this.loops.flatMap((row) =>
-            [...row].map((link) => [ accessOrResolve(link.id, link.length), accessOrResolve(link.id, link.absAngle) + link.angleOffset ])
-                    .map((cell) => [ cell[0] * Math.cos(cell[1]), cell[0] * Math.sin(cell[1]) ])
-                    .reduce((l, r) => [ l[0] + r[0], l[1] + r[1] ]));
+        return loops.flatMap((row) =>
+            row.map((link) => [ accessOrResolve(link.id, link.length), accessOrResolve(link.id, link.absAngle) + link.angleOffset ])
+               .map((cell) => [ cell[0] * Math.cos(cell[1]), cell[0] * Math.sin(cell[1]) ])
+               .reduce((l, r) => [ l[0] + r[0], l[1] + r[1] ]));
     }
-    jacobi(q: Map<string, number>): Matrix
+    function jacobi(q: Map<string, number>): Matrix
     {
-        return new Matrix(this.loops.flatMap((row) => {
+        return new Matrix(loops.flatMap((row) => {
             const q_ = [...q].map((qj) => ({ id: qj[0], value: qj[1] }));
             const ex = [] as number[];
             const ey = [] as number[];
@@ -366,4 +316,54 @@ export class Solver {
             return [ex, ey];
         }));
     }
+
+    const rnd = () => new Map([...vars].map((v) => [v, Math.random()] as [string, number]));
+    return function* solve(q_i: Map<string, number> = rnd())
+    {
+        while (true)
+        {
+            const Phi = solvePhi(q_i);
+
+            const J = jacobi(q_i);
+            const dq = d(J, Phi);
+
+            q_i = new Map([...q_i].map((val, idx) => {
+                return [val[0], val[1] + dq[idx]] as [string, number]
+            }));
+            if (dq.every((v) => Math.abs(v) < 1e-3))
+            {
+                return q_i;
+            }
+            if (yield q_i)
+            {
+                break;
+            }
+        }
+    }
+}
+
+export function lrSolver(loops: Loop[])
+{
+    const impl: LinSolve = (jacobi, Phi) => jacobi.invLR()
+        .map((col) =>
+            col.reduce((acc, cur, idx) => acc -(cur * Phi[idx]), 0)
+    );
+
+    return solver(impl, loops);
+}
+
+export function detSolver(loops: Loop[])
+{
+    const impl: LinSolve = (jacobi, Phi) => jacobi.invDet()
+        .map((col) =>
+            col.reduce((acc, cur, idx) => acc -(cur * Phi[idx]), 0)
+    );
+
+    return solver(impl, loops);
+}
+
+export function xySolver(loops: Loop[])
+{
+    const impl: LinSolve = (jacobi, Phi) => jacobi.xy(Phi);
+    return solver(impl, loops);
 }

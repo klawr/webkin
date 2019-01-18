@@ -16,7 +16,7 @@ if (true)
 {
     let last;
 //    for (const v of solver.solve())
-    for (const v of fourlver.solve())
+    for (const v of fourlver())
     {
         last = v;
     }
@@ -25,7 +25,7 @@ if (true)
 }
 else
 {
-    const iter = fourlver.solve();
+    const iter = fourlver();
     // const iter = solver.solve();
     (function renderLoop() {
         const rx = iter.next();
