@@ -1,5 +1,6 @@
 
-import { Mechanism, Solver } from './engine';
+import { Solver } from './solver';
+import { Mechanism } from './mech';
 
 let phi = Math.PI*1/4;
 

@@ -1,4 +1,4 @@
-import { Mechanism, Link } from "./engine";
+import { Mechanism, Link } from "./mech";
 import { g2 } from 'g2d';
 
 const background = g2()
