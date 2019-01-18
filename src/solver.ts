@@ -1,4 +1,4 @@
-import { Loop } from "./mech";
+import { Loop, Variable } from "./mech";
 
 
 function nearlyEqual(a:number, b:number, epsilon:number): boolean
@@ -279,7 +279,7 @@ export function solver(d: LinSolve, loops: Loop[])
         loops.flatMap(loop => loop.filter(v => v.isUndefined).map(v => v.id))
     );
 
-    function solvePhi(q: Map<string, number>): number[]
+    function solvePhi(loops: Loop[], q: Map<string, number>): number[]
     {
         const accessOrResolve = (id: string, value?: number) => value === undefined ? q.get(id) : value;
 
@@ -288,7 +288,7 @@ export function solver(d: LinSolve, loops: Loop[])
                .map((cell) => [ cell[0] * Math.cos(cell[1]), cell[0] * Math.sin(cell[1]) ])
                .reduce((l, r) => [ l[0] + r[0], l[1] + r[1] ]));
     }
-    function jacobi(q: Map<string, number>): Matrix
+    function jacobi(loops: Loop[], q: Map<string, number>): Matrix
     {
         return new Matrix(loops.flatMap((row) => {
             const q_ = [...q].map((qj) => ({ id: qj[0], value: qj[1] }));
@@ -318,27 +318,38 @@ export function solver(d: LinSolve, loops: Loop[])
     }
 
     const rnd = () => new Map([...vars].map((v) => [v, Math.random()] as [string, number]));
-    return function* solve(q_i: Map<string, number> = rnd())
+    return function* solve(s: [string, number], q_i: Map<string, number> = rnd())
     {
-        while (true)
-        {
-            const Phi = solvePhi(q_i);
+        const _loops = loops.slice().map(loop => loop.map(v => {
+            if (v.id !== s[0])
+            {
+                return v;
+            }
+            const angle = v.absAngle !== undefined ? v.absAngle : s[1];
+            const length = v.length !== undefined ? v.length : s[1];
+            return new Variable(v.id, v.angleOffset, angle, length);
+        }));
 
-            const J = jacobi(q_i);
-            const dq = d(J, Phi);
+        q_i.delete(s[0]);
+        let q_r;
+        do
+        {
+            const phi = solvePhi(_loops, q_i);
+            const J = jacobi(_loops, q_i);
+            const dq = d(J, phi);
 
             q_i = new Map([...q_i].map((val, idx) => {
                 return [val[0], val[1] + dq[idx]] as [string, number]
             }));
+            q_r = new Map(q_i);
+            q_r.set(s[0], s[1]);
             if (dq.every((v) => Math.abs(v) < 1e-3))
             {
-                return q_i;
-            }
-            if (yield q_i)
-            {
+                yield q_r;
                 break;
             }
         }
+        while (!(yield q_r))
     }
 }
 

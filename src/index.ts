@@ -11,35 +11,42 @@ const cv = document.body.appendChild((() => {
 })());
 const ctx = cv.getContext('2d');
 
+let phi = Math.PI*1/4;
 
-if (true)
+if (false)
 {
-    let last;
-//    for (const v of solver.solve())
-    for (const v of fourlver())
-    {
-        last = v;
-    }
-    render(fourbar, last, ctx);
-//    render(stephenson2, last, ctx);
+    const val = exhaust(fourlver(['a0', phi]), 42);
+    render(fourbar, val, ctx);
 }
 else
 {
-    const iter = fourlver();
+    let rx;
     // const iter = solver.solve();
     (function renderLoop() {
-        const rx = iter.next();
-        render(fourbar, rx.value, ctx);
+        rx = exhaust(fourlver(['a0', phi], rx), 42);
+        render(fourbar, rx, ctx);
         // render(stephenson2, rx.value, ctx);
+        phi += Math.PI / 180;
+        requestAnimationFrame(renderLoop);
+    })();
+}
+
+function exhaust<T>(it: IterableIterator<T>, max: number) 
+{
+    let val;
+    for (let i = 0; i < max; ++i)
+    {
+        const rx = it.next();
         if (!rx.done)
         {
-            requestAnimationFrame(renderLoop);
+            val = rx.value;
         }
         else
         {
-            console.log("FINISHED!!! HAHAHAH");
+            break;
         }
-    })();
+    }
+    return val;
 }
 
 

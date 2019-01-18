@@ -21,9 +21,9 @@ export function render(mec: Mechanism, q_i: Map<string, number>, ctx: RenderingC
         return link.length.length ? link.length[0] : -q_i.get(link.id);
     }
 
-    function knownLength(link: Link)
+    function fixed(link: Link)
     {
-        return !!link.length.length;
+        return link.absAngle === undefined;
     }
 
     function newPoint(s: Coords, len: number, angle: number) {
@@ -53,9 +53,10 @@ export function render(mec: Mechanism, q_i: Map<string, number>, ctx: RenderingC
             pts.push(newPoint(start, p.length, angle + p.angleOffset));
         }
 
-        if (knownLength(link))
+        if (fixed(link))
         {
-            rcmds.link2({pts});
+            // @ts-ignore
+            rcmds.link2({pts,fs:'@linkfill'});
         }
         else
         {
@@ -70,7 +71,7 @@ export function render(mec: Mechanism, q_i: Map<string, number>, ctx: RenderingC
     }
 
     mec.links.forEach(renderLink);
-    rcmds.gnd({});
     marked.forEach((m) => m.forEach(c => rcmds.nod(c)));
+    rcmds.gnd({});
     rcmds.exe(ctx);
 }
