@@ -7,15 +7,23 @@ const background = g2()
 
 type Coords = { readonly x: number, readonly y: number };
 
-export function render(mec: Mechanism, q_i: Map<string, number>, ctx: RenderingContext) {
+export function render(mec: Mechanism, q_i: Map<string, number>, ctx: RenderingContext)
+{
     const rcmds = g2().view({x:300,y:600,cartesian:true}).use({grp: background});
     const marked = new Map<string, Coords[]>();
 
-    function getAngle(link: Link) {
+    function getAngle(link: Link)
+    {
         return link.absAngle === undefined ? q_i.get(link.id) : link.absAngle;
     }
-    function getFirstLength(link: Link) {
+    function getFirstLength(link: Link)
+    {
         return link.length.length ? link.length[0] : -q_i.get(link.id);
+    }
+
+    function knownLength(link: Link)
+    {
+        return !!link.length.length;
     }
 
     function newPoint(s: Coords, len: number, angle: number) {
@@ -45,8 +53,17 @@ export function render(mec: Mechanism, q_i: Map<string, number>, ctx: RenderingC
             pts.push(newPoint(start, p.length, angle + p.angleOffset));
         }
 
-        // @ts-ignore
-        rcmds.link2({pts, closed: true});//.txt({...pts[0], str:link.id})
+        if (knownLength(link))
+        {
+            rcmds.link2({pts});
+        }
+        else
+        {
+            // @ts-ignore
+            rcmds.ply({pts,ld:g2.symbol.dashdot});
+        }
+        rcmds.label({str:link.id});
+
         const mounts = pts.slice(1);
         marked.set(link.id, mounts);
         return mounts;

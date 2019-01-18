@@ -334,9 +334,9 @@ export class Solver {
         const accessOrResolve = (id: string, value?: number) => value === undefined ? q.get(id) : value;
 
         return this.loops.flatMap((row) =>
-       [...row].map((link) => [ accessOrResolve(link.id, link.length), accessOrResolve(link.id, link.absAngle) + link.angleOffset ])
-               .map((cell) => [ cell[0] * Math.cos(cell[1]), cell[0] * Math.sin(cell[1]) ])
-               .reduce((l, r) => [ l[0] + r[0], l[1] + r[1] ]));
+            [...row].map((link) => [ accessOrResolve(link.id, link.length), accessOrResolve(link.id, link.absAngle) + link.angleOffset ])
+                    .map((cell) => [ cell[0] * Math.cos(cell[1]), cell[0] * Math.sin(cell[1]) ])
+                    .reduce((l, r) => [ l[0] + r[0], l[1] + r[1] ]));
     }
     jacobi(q: Map<string, number>): Matrix
     {
@@ -366,5 +366,4 @@ export class Solver {
             return [ex, ey];
         }));
     }
-    dq: () => number[];
 }
