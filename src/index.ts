@@ -1,5 +1,5 @@
 
-import { stephenson2, solver, fourbar, fourlver } from './stephenson2';
+import { stephenson2, solver, fourbar, fourlver, solver2, stephenson22 } from './stephenson2';
 import { render } from './render';
 
 const cv = document.body.appendChild((() => {
@@ -22,16 +22,19 @@ else
 {
     let rx;
     // const iter = solver.solve();
-    (function renderLoop() {
-        rx = exhaust(fourlver(['a0', phi], rx), 42);
-        render(fourbar, rx, ctx);
-        // render(stephenson2, rx.value, ctx);
-        phi += Math.PI / 180;
+    (function renderLoop()
+    {
+        rx = exhaust(solver2(['a01', phi], rx), 42);
+        if (rx)
+        {
+            render(stephenson22, rx, ctx);
+        }
+        phi -= Math.PI / 180;
         requestAnimationFrame(renderLoop);
     })();
 }
 
-function exhaust<T>(it: IterableIterator<T>, max: number) 
+function exhaust<T>(it: IterableIterator<T>, max: number)
 {
     let val;
     for (let i = 0; i < max; ++i)
@@ -43,10 +46,10 @@ function exhaust<T>(it: IterableIterator<T>, max: number)
         }
         else
         {
-            break;
+            return val;
         }
     }
-    return val;
+    return undefined;
 }
 
 

@@ -1,5 +1,6 @@
 import { Mechanism, Link } from "./mech";
 import { g2 } from 'g2d';
+import { SolveResult } from "./solver";
 
 const background = g2()
     .clr()
@@ -7,18 +8,18 @@ const background = g2()
 
 type Coords = { readonly x: number, readonly y: number };
 
-export function render(mec: Mechanism, q_i: Map<string, number>, ctx: RenderingContext)
+export function render(mec: Mechanism, q_i: SolveResult, ctx: RenderingContext)
 {
     const rcmds = g2().view({x:300,y:600,cartesian:true}).use({grp: background});
     const marked = new Map<string, Coords[]>();
 
     function getAngle(link: Link)
     {
-        return link.absAngle === undefined ? q_i.get(link.id) : link.absAngle;
+        return link.absAngle === undefined ? q_i[link.id].q : link.absAngle;
     }
     function getFirstLength(link: Link)
     {
-        return link.length.length ? link.length[0] : -q_i.get(link.id);
+        return link.length.length ? link.length[0] : q_i[link.id].q;
     }
 
     function fixed(link: Link)
@@ -56,14 +57,14 @@ export function render(mec: Mechanism, q_i: Map<string, number>, ctx: RenderingC
         if (fixed(link))
         {
             // @ts-ignore
-            rcmds.link2({pts,fs:'@linkfill'});
+            rcmds.link2({pts,fs:'#66666633'});
         }
         else
         {
             // @ts-ignore
             rcmds.ply({pts,ld:g2.symbol.dashdot});
         }
-        rcmds.label({str:link.id});
+        // rcmds.label({str:link.id});
 
         const mounts = pts.slice(1);
         marked.set(link.id, mounts);
