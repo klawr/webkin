@@ -330,47 +330,65 @@ export function solver(d: LinSolve, loops: Loop[])
             return new Variable(v.id, v.angleOffset, angle, length);
         }));
 
-        let q_i = new Map(Object.getOwnPropertyNames(q_in).map(n => [n, q_in[n].q] as [string, number]));
+        let q_i = new Map(
+            Object.getOwnPropertyNames(q_in)
+                  .filter(n => n !== s[0])
+                  .map(n => [n, q_in[n].q] as [string, number])
+        );
+
         let q_r: SolveResult;
+        let J: Matrix;
         let dq: number[];
         do
         {
             const phi = solvePhi(_loops, q_i);
-            const J = jacobi(_loops, q_i);
+            J = jacobi(_loops, q_i);
             dq = d(J, phi);
 
             q_i = new Map([...q_i].map((val, idx) => {
                 return [val[0], val[1] + dq[idx]] as [string, number]
             }));
-
-            const v = speed(_loops, J);
-            const a = accel(_loops, q_i, J, v);
-            q_r = pack([...q_i, s], v);
+            q_r = pack([...q_i, s]);
         }
         while (!(yield q_r) && dq.some((v) => Math.abs(v) > 1e-3));
+
+        let q_i_ = [...q_i, s];
+        const v = speed(_loops, J, s[0]);
+        q_r = pack(q_i_, v);
+        const a = accel(_loops, J, q_r);
+        q_r = pack(q_i_, v, a);
+        yield q_r;
     }
 }
 
-function speed(loops: Loop[], J: Matrix)
+function speed(loops: Loop[], J: Matrix, drive_id: string)
 {
-    const phi_ = loops.flatMap(l => l.filter(v => !v.isUndefined)
-        .flatMap(v => {
+    const phi_ = loops.flatMap(l => l.filter(v => v.id === drive_id)
+        .map(v => {
             const angle = v.absAngle + v.angleOffset;
             return [ v.length * Math.sin(angle), -v.length * Math.cos(angle) ];
-        }))
+        })
+        .reduce((l, r) => [ l[0] + r[0], l[1] + r[1] ], [0, 0])
+    );
     return J.xy(phi_).concat(1);
 }
 
-function accel(loops: Loop[], q: Map<string, number>, J: Matrix, v: number[]): number[]
+function accel(loops: Loop[], J: Matrix, q_r: SolveResult): number[]
 {
-    const accessOrResolve = (id: string, value?: number) => value === undefined ? q.get(id) : value;
+    const accessOrResolve = (id: string, value?: number) =>
+        value === undefined ? q_r[id].q : value;
 
     const phi__ = loops.flatMap((row) =>
-        row.map((link) => [ accessOrResolve(link.id, link.length), accessOrResolve(link.id, link.absAngle) + link.angleOffset ])
-            .map((cell, i) => [ cell[0] * Math.cos(cell[1]) * v[i] * v[i], cell[0] * Math.sin(cell[1]) * v[i] * v[i] ])
-            .reduce((l, r) => [ l[0] + r[0], l[1] + r[1] ]));
+        row.map((link) => [
+            accessOrResolve(link.id, link.length),
+            accessOrResolve(link.id, link.absAngle) + link.angleOffset,
+            q_r[link.id] ? q_r[link.id].v : 0
+        ]).map((cell) => [
+            cell[0] * Math.cos(cell[1]) * cell[2] * cell[2],
+            cell[0] * Math.sin(cell[1]) * cell[2] * cell[2]
+        ]).reduce((l, r) => [ l[0] + r[0], l[1] + r[1] ], [0, 0]));
 
-    return J.xy(phi__);
+    return J.xy(phi__).concat(0);
 }
 
 export interface SolveResult
@@ -382,9 +400,14 @@ export interface SolveResult
     };
 }
 
-function pack(q_i: [string, number][], speed: number[]): SolveResult
+function pack(q_i: [string, number][], speed?: number[], accel?: number[]): SolveResult
 {
-    return q_i.reduce((o, v, i) => ({ ...o, [v[0]]: { q: v[1], v: speed[i], a: 0 } }), Object.create(null) as SolveResult);
+    return q_i.reduce((o, v, i) => ({
+        ...o, [v[0]]: {
+            q: v[1],
+            v: speed && speed[i],
+            a: accel && accel[i] }
+        }), Object.create(null) as SolveResult);
 }
 
 export function lrSolver(loops: Loop[])
