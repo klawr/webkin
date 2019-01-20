@@ -26,12 +26,22 @@ export const fourbar = new Mechanism()
     .defineLink('g0', {length:200,absAngle:0})
     .defineLink('b1', {length: 100, joint: 'g0'});
 
+export const acc = new Mechanism()
+    .defineLink('f0',{length: Math.SQRT2 * 100})
+    .defineLink('f1',{length: 200, joint: 'f0'})
+    .defineLink('h1',{length: 300, joint: 'h0'})
+    .defineLink('h0',{length: 500, absAngle: Math.atan2(3,4)});
+
+export const accsolver = xySolver([
+    acc.extractLoop(['f1',0],['h1',0])
+]);
+
 export const solver = xySolver([
     stephenson2.extractLoop(['b1',0],['c1',0]),
     stephenson2.extractLoop(['b2',0],['c1',1])
 ]);
 
-export const fourlver = xySolver([
+export const fourbarsolver = xySolver([
     fourbar.extractLoop(['a1', 0],['b1',0])
 ]);
 
