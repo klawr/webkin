@@ -1,4 +1,4 @@
-import { Loop, Variable } from "./mech";
+import { Loop, Variable } from "./mech.service";
 
 
 function nearlyEqual(a:number, b:number, epsilon:number): boolean
@@ -361,9 +361,9 @@ export function solver(d: LinSolve, loops: Loop[])
     }
 }
 
-function speed(loops: Loop[], J: Matrix, drive_id: string)
+function speed(loops: Loop[], J: Matrix, s: string)
 {
-    const phi_ = loops.flatMap(l => l.filter(v => v.id === drive_id)
+    const phi_ = loops.flatMap(l => l.filter(v => v.id === s)
         .map(v => {
             const angle = v.absAngle + v.angleOffset;
             return [ v.length * Math.sin(angle), -v.length * Math.cos(angle) ];
@@ -412,9 +412,9 @@ function pack(q_i: [string, number][], speed?: number[], accel?: number[]): Solv
 
 export function lrSolver(loops: Loop[])
 {
-    const impl: LinSolve = (jacobi, Phi) => jacobi.invLR()
+    const impl: LinSolve = (jacobi, phi) => jacobi.invLR()
         .map((col) =>
-            col.reduce((acc, cur, idx) => acc -(cur * Phi[idx]), 0)
+            col.reduce((acc, cur, idx) => acc -(cur * phi[idx]), 0)
     );
 
     return solver(impl, loops);

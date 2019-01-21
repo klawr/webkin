@@ -1,6 +1,6 @@
-import { Mechanism, Link } from "./mech";
+import { Mechanism, Link } from "./mech.service";
 import { g2 } from 'g2d';
-import { SolveResult } from "./solver";
+import { SolveResult } from "./solver.service";
 
 const background = g2()
     .clr()

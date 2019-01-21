@@ -1,6 +1,6 @@
 
-import { stephenson2, solver, fourbar, fourbarsolver, solver2, stephenson22, accsolver, acc } from './stephenson2';
-import { render } from './render';
+import { stephenson2, solver, fourbar, fourbarsolver, solver2, stephenson22, accsolver, acc } from './examples.service';
+import { render } from './mech.component';
 
 const cv = document.body.appendChild((() => {
     const cv = document.createElement('canvas') as HTMLCanvasElement;

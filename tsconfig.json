@@ -1,14 +1,19 @@
 {
+    "compileOnSave": false,
     "compilerOptions": {
+        "baseUrl": "./",
         "sourceMap": true,
-        "module":"es6",
+        "module": "es6",
         "moduleResolution": "node",
-        "outDir": "dist",
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "declaration": false,
+        "outDir": "./dist/out-tsc",
         "target": "ES2016",
         "alwaysStrict": true,
+        "importHelpers": true,
         "lib": [
             "dom",
-            "es2017",
             "es2018",
             "esnext",
         ],
@@ -16,8 +21,5 @@
         "typeRoots": [
             "node_modules/@types"
         ]
-    },
-    "include": [
-        "src/**/*"
-    ]
+    }
 }

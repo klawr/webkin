@@ -1,6 +1,6 @@
 
-import { xySolver } from './solver';
-import { Mechanism } from './mech';
+import { xySolver } from './solver.service';
+import { Mechanism } from './mech.service';
 
 export const stephenson2 = new Mechanism()
     .defineLink('g0', {length: 300, absAngle: 0})

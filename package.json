@@ -6,20 +6,46 @@
     "author": "Kai Lawrence",
     "main": "dist/main.js",
     "scripts": {
-        "build": "npx webpack --mode development --config webpack.config.js",
-        "watch": "npx webpack --mode development --watch"
+        "ng": "ng",
+        "start": "ng serve",
+        "build": "ng build",
+        "test": "ng test",
+        "lint": "ng lint",
+        "e2e": "ng e2e"
     },
     "dependencies": {
-        "closure-webpack-plugin": "^2.0.0-rc.17",
+        "@angular/animations": "~7.2.0",
+        "@angular/common": "~7.2.0",
+        "@angular/compiler": "~7.2.0",
+        "@angular/core": "~7.2.0",
+        "@angular/forms": "~7.2.0",
+        "@angular/platform-browser": "~7.2.0",
+        "@angular/platform-browser-dynamic": "~7.2.0",
+        "@angular/router": "~7.2.0",
+        "core-js": "^2.5.4",
         "g2d": "..\\..\\HiWi\\g2\\g2d-2.5.2.tgz",
-        "google-closure-compiler": "^20181231.0.0-webpack-beta",
-        "typescript": "^3.2.2"
+        "rxjs": "~6.3.3",
+        "tslib": "^1.9.0",
+        "zone.js": "~0.8.26"
     },
     "devDependencies": {
-        "@types/node": "^10.12.18",
-        "npx": "^10.2.0",
-        "ts-loader": "^5.3.3",
-        "webpack": "^4.28.1",
-        "webpack-cli": "^3.2.1"
+        "@angular-devkit/build-angular": "~0.12.0",
+        "@angular/cli": "~7.2.2",
+        "@angular/compiler-cli": "~7.2.0",
+        "@angular/language-service": "~7.2.0",
+        "@types/node": "~8.9.4",
+        "@types/jasmine": "~2.8.8",
+        "@types/jasminewd2": "~2.0.3",
+        "codelyzer": "~4.5.0",
+        "jasmine-core": "~2.99.1",
+        "jasmine-spec-reporter": "~4.2.1",
+        "karma": "~3.1.1",
+        "karma-chrome-launcher": "~2.2.0",
+        "karma-coverage-istanbul-reporter": "~2.0.1",
+        "karma-jasmine": "~1.1.2",
+        "karma-jasmine-html-reporter": "^0.2.2",
+        "protractor": "~5.4.0",
+        "tslint": "~5.11.0",
+        "typescript": "~3.2.2"
     }
 }
