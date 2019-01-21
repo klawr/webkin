@@ -3,7 +3,6 @@ import { NgModule } from '@angular/core';
 
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
-import { AppComponent } from './app.component';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule } from '@angular/material/dialog';
@@ -14,12 +13,15 @@ import { MatListModule } from '@angular/material/list';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSliderModule } from '@angular/material/slider';
 import { MatTabsModule } from '@angular/material/tabs';
-
 import { ScrollDispatchModule } from '@angular/cdk/scrolling';
+
+import { AppComponent } from './app.component';
+import { CanvasComponent } from './canvas/canvas.component';
 
 @NgModule({
     declarations: [
-        AppComponent
+        AppComponent,
+        CanvasComponent
     ],
     imports: [
         BrowserAnimationsModule,

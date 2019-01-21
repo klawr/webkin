@@ -1,4 +1,6 @@
 import { Component } from '@angular/core';
+import { g2 } from 'g2d';
+import { Subject } from 'rxjs';
 
 @Component({
     selector: 'app-root',
@@ -7,4 +9,5 @@ import { Component } from '@angular/core';
 })
 export class AppComponent {
     title = 'angular';
+    g = new Subject<g2>();
 }
