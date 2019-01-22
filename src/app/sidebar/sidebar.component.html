@@ -1,0 +1,100 @@
+<br>
+
+<mat-form-field class="stretch">
+    <mat-select placeholder="Webkinematik">
+        <mat-option *ngFor="let mech of mechanisms" [value]="mech">
+            {{mech}}
+        </mat-option>
+    </mat-select>
+</mat-form-field>
+
+<mat-accordion>
+    <div *ngFor="let link of links; index as idx">
+        <mat-expansion-panel (opened)="panelOpenState = true" (closed)="panelOpenState = false" [disabled]="panelOpenState && linkId.value === ''">
+            <mat-expansion-panel-header>
+                <mat-panel-title>
+                    {{linkId.value}}
+
+                </mat-panel-title>
+                <mat-panel-description>
+                </mat-panel-description>
+            </mat-expansion-panel-header>
+
+            <mat-form-field>
+                <input #linkId placeholder="Link ID" value={{link}} matInput>
+            </mat-form-field>
+
+            <mat-form-field>
+                <mat-select placeholder="Select connection">
+                    <mat-option>Origin</mat-option>
+                    <div *ngFor="let joint of joints">
+                        <mat-option *ngFor="let mp of joint; index as idx" [value]="mp">
+                            {{mp}} {{idx}}
+                        </mat-option>
+                    </div>
+                </mat-select>
+            </mat-form-field>
+            <br>
+            <mat-form-field>
+                <input #lengthInput placeholder="Length" matInput value="100">
+            </mat-form-field>
+            <mat-form-field>
+                <input #angleInput placeholder="Angle" matInput value="0">
+            </mat-form-field>
+            <!-- <br> -->
+            <div *ngFor="let length of linklength; index as idx">
+                <mat-form-field>
+                    <input #lengthInput placeholder="Length {{idx + 1}}" matInput value="100">
+                </mat-form-field>
+                <mat-form-field *ngIf="idx !== linklength.length - 1">
+                    <input #angleInput placeholder="Angle {{idx + 1}}" matInput value="0">
+                </mat-form-field>
+
+            </div>
+            <mat-slider matTooltipPosition="above" matTooltip="Starting angle" class="stretch" min="0" max="360" step="1"
+                value="0" thumbLabel [displayWith]="formatLabel"></mat-slider>
+        </mat-expansion-panel>
+    </div>
+    <mat-expansion-panel (opened)="panelOpenState = true" (closed)="panelOpenState = false">
+        <mat-expansion-panel-header>
+            <mat-panel-title>
+                New Link
+            </mat-panel-title>
+            <mat-panel-description>
+            </mat-panel-description>
+        </mat-expansion-panel-header>
+
+        <mat-form-field>
+            <input #linkId placeholder="New ID" matInput>
+        </mat-form-field>
+
+        <mat-form-field>
+            <mat-select placeholder="Select connection">
+                <mat-option>Origin</mat-option>
+                <div *ngFor="let joint of joints">
+                    <mat-option *ngFor="let mp of joint; index as idx" [value]="mp">
+                        {{mp}} {{idx}}
+                    </mat-option>
+                </div>
+            </mat-select>
+        </mat-form-field>
+        <br>
+        <mat-form-field>
+            <input #lengthInput placeholder="length" matInput value="100">
+        </mat-form-field>
+        <mat-form-field>
+            <input #angleInput placeholder="angle" matInput value="0">
+        </mat-form-field>
+        <div *ngFor="let length of linklength; index as idx">
+            <mat-form-field>
+                <input #lengthInput placeholder="length" matInput value="100">
+            </mat-form-field>
+            <mat-form-field *ngIf="idx !== linklength.length - 1">
+                <input #angleInput placeholder="angle" matInput value="0">
+            </mat-form-field>
+
+        </div>
+        <mat-slider class="stretch" min="0" max="360" step="1" value="0" thumbLabel [displayWith]="formatLabel"></mat-slider>
+
+    </mat-expansion-panel>
+</mat-accordion>
