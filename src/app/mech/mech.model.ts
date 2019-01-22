@@ -16,7 +16,7 @@ export interface Link
     readonly id: string;
     readonly joint?: JointId;
     readonly points: Mountpoint[];
-    readonly absAngle: number;
+    readonly absAngle?: number;
     readonly edgeLengths: number[];
     readonly relAngles: number[];
 }

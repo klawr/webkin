@@ -1,6 +1,7 @@
 import { Action } from '@ngrx/store';
 
-import { Link, JointId, LoopDefinition } from './mech.model'
+import { Link, LoopDefinition } from './mech.model'
+import { MechState } from './mech.reducer';
 
 export enum LinkActionTypes
 {
@@ -81,4 +82,28 @@ export class UndefineLoopAction implements Action
 
 export type LoopActions
     = DefineLoopAction
-    | UndefineLoopAction
+    | UndefineLoopAction;
+
+export enum MechanismStateActionType
+{
+    ChangePhi = 'mech/mechanismstate/changePhi',
+    Replace = 'mech/mechanismstate/replace',
+}
+
+export class ReplaceMechanismStateAction implements Action
+{
+    readonly type = MechanismStateActionType.Replace;
+    constructor(public readonly data: MechState) {}
+}
+
+export class ChangePhiMechanismStateAction implements Action
+{
+    readonly type = MechanismStateActionType.ChangePhi;
+    constructor(public readonly id: string, public readonly angle: number) {}
+}
+
+export type MechanismStateActions
+    = ReplaceMechanismStateAction
+    | ChangePhiMechanismStateAction
+    | LoopActions
+    | LinkActions;

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { createSelector, Store } from '@ngrx/store';
-import { from, Observable, pipe, Subscriber } from 'rxjs';
-import { switchAll, switchMap, take, map } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { AppState } from '../app.state';
 import { JointId, Loop, Variable } from './mech.model';
 import { SolveResult, xySolver } from './solver.service';
@@ -73,12 +73,13 @@ export class MechanismService
         this.loops = this.store.select(selectLoops);
         this.solveResult = this.loops.pipe(
             map(([mech, loops]) => {
-                if (!mech.phi)
+                // TODO preconditions for solver
+                if (!mech.phi || loops.length === 0)
                 {
                     return [mech, Object.create(null)] as [MechState, SolveResult];
                 }
                 // TODO var exhaust
-                return [mech, exhaust(xySolver(loops)(mech.phi), 42)] as [MechState, SolveResult]
+                return [mech, exhaust(xySolver(loops)(mech.phi), 1000)] as [MechState, SolveResult]
             })
         );
     }

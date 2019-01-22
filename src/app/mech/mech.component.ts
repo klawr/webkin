@@ -1,11 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { Store } from '@ngrx/store';
 import { g2 } from 'g2d';
 import { Observable } from 'rxjs';
-import { AppState } from '../app.state';
 import { MechanismService } from "./mech.service";
 import { SolveResult } from "./solver.service";
-import { map } from 'rxjs/operators';
+import { map, filter } from 'rxjs/operators';
 import { MechState } from './mech.reducer';
 import { Link } from './mech.model';
 
@@ -23,6 +21,7 @@ export class MechComponent implements OnInit
         private mechService: MechanismService
     ) {
         this.renderCommands = this.mechService.solveResult.pipe(
+            filter(([_, result]) => result !== undefined),
             map(rx => this.render(...rx))
         );
     }
@@ -31,9 +30,10 @@ export class MechComponent implements OnInit
     {
     }
 
+    // Multi q_i
     private render(mec: MechState, q_i: SolveResult)
     {
-        const rcmds = g2().view({x:300,y:600,cartesian:true});
+        const rcmds = g2().view({x:650,y:400,cartesian:true});
         const marked = new Map<string, Coords[]>();
 
         function getAngle(link: Link)
@@ -50,14 +50,16 @@ export class MechComponent implements OnInit
             return link.absAngle === undefined;
         }
 
-        function newPoint(s: Coords, len: number, angle: number) {
+        function newPoint(s: Coords, len: number, angle: number)
+        {
             return {
                 x: s.x + len * Math.cos(angle),
                 y: s.y + len * Math.sin(angle)
             }
         }
 
-        function renderLink(link: Link): Coords[] {
+        function renderLink(link: Link): Coords[]
+        {
             let entry = marked.get(link.id);
             if (entry) {
                 return entry;

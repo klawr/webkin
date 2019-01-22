@@ -2,8 +2,8 @@
 
 <mat-form-field class="stretch">
     <mat-select placeholder="Webkinematik">
-        <mat-option *ngFor="let mech of mechanisms" [value]="mech">
-            {{mech}}
+        <mat-option *ngFor="let example of exampleService.ids" [value]="example" (click)="loadMech(example)">
+            {{example}}
         </mat-option>
     </mat-select>
 </mat-form-field>
@@ -11,10 +11,9 @@
 <mat-accordion>
     <div *ngFor="let link of links; index as idx">
         <mat-expansion-panel (opened)="panelOpenState = true" (closed)="panelOpenState = false" [disabled]="panelOpenState && linkId.value === ''">
-            <mat-expansion-panel-header>
+            <mat-expansion-panel-header class="stretch">
                 <mat-panel-title>
                     {{linkId.value}}
-
                 </mat-panel-title>
                 <mat-panel-description>
                 </mat-panel-description>
@@ -41,7 +40,6 @@
             <mat-form-field>
                 <input #angleInput placeholder="Angle" matInput value="0">
             </mat-form-field>
-            <!-- <br> -->
             <div *ngFor="let length of linklength; index as idx">
                 <mat-form-field>
                     <input #lengthInput placeholder="Length {{idx + 1}}" matInput value="100">
@@ -49,19 +47,18 @@
                 <mat-form-field *ngIf="idx !== linklength.length - 1">
                     <input #angleInput placeholder="Angle {{idx + 1}}" matInput value="0">
                 </mat-form-field>
-
             </div>
-            <mat-slider matTooltipPosition="above" matTooltip="Starting angle" class="stretch" min="0" max="360" step="1"
-                value="0" thumbLabel [displayWith]="formatLabel"></mat-slider>
+
+            <mat-slider color="accent" matTooltip="preview angle" matTooltipPosition="left" matTooltip="preview angle"
+                min="0" max="360" step="1" value="0" thumbLabel></mat-slider>
+            <mat-checkbox>angle fixed</mat-checkbox>
         </mat-expansion-panel>
     </div>
-    <mat-expansion-panel (opened)="panelOpenState = true" (closed)="panelOpenState = false">
+    <mat-expansion-panel>
         <mat-expansion-panel-header>
             <mat-panel-title>
                 New Link
             </mat-panel-title>
-            <mat-panel-description>
-            </mat-panel-description>
         </mat-expansion-panel-header>
 
         <mat-form-field>
@@ -72,29 +69,47 @@
             <mat-select placeholder="Select connection">
                 <mat-option>Origin</mat-option>
                 <div *ngFor="let joint of joints">
-                    <mat-option *ngFor="let mp of joint; index as idx" [value]="mp">
-                        {{mp}} {{idx}}
+                    <mat-option *ngFor="let id of joint; index as idx" [value]="mp">
+                        {{id}} {{idx}}
                     </mat-option>
                 </div>
             </mat-select>
         </mat-form-field>
         <br>
         <mat-form-field>
-            <input #lengthInput placeholder="length" matInput value="100">
+            <input #lengthInput placeholder="Length" matInput value="100">
         </mat-form-field>
-        <mat-form-field>
-            <input #angleInput placeholder="angle" matInput value="0">
-        </mat-form-field>
+
+        <button mat-button mat-stroked-button (click)="addEdge()">Add edge</button>
+
+
         <div *ngFor="let length of linklength; index as idx">
-            <mat-form-field>
-                <input #lengthInput placeholder="length" matInput value="100">
+            <mat-form-field color="primary">
+                <input #lengthInput placeholder="Length {{idx + 1}}" matInput value="100">
             </mat-form-field>
-            <mat-form-field *ngIf="idx !== linklength.length - 1">
-                <input #angleInput placeholder="angle" matInput value="0">
+            <mat-form-field color="accent">
+                <input #angleInput placeholder="Angle {{idx + 1}}" matInput value="0">
             </mat-form-field>
 
         </div>
-        <mat-slider class="stretch" min="0" max="360" step="1" value="0" thumbLabel [displayWith]="formatLabel"></mat-slider>
+        <div class="setAngle">
+            <mat-slider color="accent" min="0" max="360" step="1"
+                value="0" thumbLabel></mat-slider>
+
+                <mat-slide-toggle>Fix angle</mat-slide-toggle>
+        </div>
+
+
+        <div align="end">
+            <button mat-stroked-button mat-button color="warn" (click)="abort()">Abort</button>
+            <button mat-stroked-button mat-button color="accent" style="right:0">Create</button>
+        </div>
+
+
+
+
+
 
     </mat-expansion-panel>
 </mat-accordion>
+<mat-slider #phiSlider color="primary" class="stretch" min="0" max="360" step="1" value="0" thumbLabel (input)="changePhi(phiSlider.value)"></mat-slider>

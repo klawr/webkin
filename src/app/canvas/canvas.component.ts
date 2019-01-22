@@ -43,7 +43,6 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy
     draw = (cqueue: g2): void =>
     {
         g2().clr()
-            .grid({})
             .use({ grp: cqueue })
             .exe(this.renderingCtx);
     }

@@ -1,9 +1,8 @@
 
 import { Action } from '@ngrx/store';
 import { fac, fdac } from '../utils';
-import { ClearLinkAction, LinkActions, LinkActionTypes, LoopActions, LoopActionTypes, UndefineLinkAction } from './mech.actions';
+import { ClearLinkAction, LinkActions, LinkActionTypes, LoopActions, LoopActionTypes, UndefineLinkAction, MechanismStateActionType, ReplaceMechanismStateAction, MechanismStateActions } from './mech.actions';
 import { Link, LoopDefinition, Mountpoint } from './mech.model';
-
 
 export interface Dictionary<T>
 {
@@ -26,7 +25,7 @@ const initialState: MechState = Object.freeze({
     loops: Object.freeze([])
 });
 
-function sanitizeLink(link: Link): Link
+export function sanitizeLink(link: Link): Link
 {
     let edgeLengths = link.edgeLengths;
     const points: Mountpoint[] = [];
@@ -37,27 +36,27 @@ function sanitizeLink(link: Link): Link
     }
     else
     {
-        if (link.edgeLengths.length)
+        if (edgeLengths.length)
         {
-            if (link.relAngles.length !== link.edgeLengths.length - 1)
+            if (link.relAngles.length !== edgeLengths.length - 1)
             {
                 throw new Error("angles.length !== length.length - 1");
             }
-            points.push(fac({ length: link.edgeLengths[0] }));
+            points.push(fac({ length: edgeLengths[0], angleOffset: 0 }));
             let gammaOffset = 0;
             let beta = 0;
-            for (let i = 1; i < this.length.length; ++i)
+            for (let i = 1; i < edgeLengths.length; ++i)
             {
-                const a = this.points[i-1].length;
-                const b = this.length[i];
-                const gamma = this.relAngles[i-1] - gammaOffset;
+                const a = points[i-1].length;
+                const b = edgeLengths[i];
+                const gamma = link.relAngles[i-1] - gammaOffset;
 
                 const c = Math.sqrt(a * a + b * b - Math.cos(gamma) * 2 * a * b);
                 beta += Math.asin(Math.sin(gamma) * b / c);
                 const alpha = Math.sin(Math.sin(gamma) * a / c);
 
                 gammaOffset = alpha;
-                points.push(fac({ length: c, angle: beta }));
+                points.push(fac({ length: c, angleOffset: beta }));
             }
         }
     }
@@ -129,10 +128,23 @@ export function loopReducer(
     }
 }
 
-export function mechReducer(state = initialState, action: Action)
+export function mechReducer(state = initialState, action: MechanismStateActions)
 {
-    return fac(state, {
-        links: linkReducer(state.links, action as LinkActions),
-        loops: loopReducer(state.loops, action as LoopActions)
-    })
+    switch (action.type)
+    {
+        case MechanismStateActionType.Replace: {
+            return fac(action.data);
+        }
+        case MechanismStateActionType.ChangePhi: {
+            return fac(state, {
+                phi: Object.freeze([action.id, action.angle])
+            });
+        }
+        default:
+            return fac(state, {
+                links: linkReducer(state.links, action as LinkActions),
+                loops: loopReducer(state.loops, action as LoopActions)
+            });
+    }
 }
+

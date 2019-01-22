@@ -4,6 +4,7 @@ import { NgModule } from '@angular/core';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatExpansionModule } from '@angular/material/expansion';
@@ -13,6 +14,7 @@ import { MatListModule } from '@angular/material/list';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSliderModule } from '@angular/material/slider';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -37,6 +39,7 @@ import { SidebarComponent } from './sidebar/sidebar.component';
         BrowserAnimationsModule,
         BrowserModule,
         MatButtonModule,
+        MatCheckboxModule,
         MatDialogModule,
         MatDividerModule,
         MatExpansionModule,
@@ -46,6 +49,7 @@ import { SidebarComponent } from './sidebar/sidebar.component';
         MatRadioModule,
         MatSelectModule,
         MatSidenavModule,
+        MatSlideToggleModule,
         MatSliderModule,
         MatTabsModule,
         MatTooltipModule
