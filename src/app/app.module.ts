@@ -15,15 +15,21 @@ import { MatSliderModule } from '@angular/material/slider';
 import { MatTabsModule } from '@angular/material/tabs';
 import { ScrollDispatchModule } from '@angular/cdk/scrolling';
 
+import { StoreModule } from '@ngrx/store';
+import { mechReducer } from './mech/mech.reducer';
+
 import { AppComponent } from './app.component';
 import { CanvasComponent } from './canvas/canvas.component';
+import { MechComponent } from './mech/mech.component';
 
 @NgModule({
     declarations: [
         AppComponent,
-        CanvasComponent
+        CanvasComponent,
+        MechComponent,
     ],
     imports: [
+        StoreModule.forRoot({ mech: mechReducer }),
         BrowserAnimationsModule,
         BrowserModule,
         MatButtonModule,
@@ -36,7 +42,7 @@ import { CanvasComponent } from './canvas/canvas.component';
         MatSidenavModule,
         MatSliderModule,
         MatTabsModule,
-        ScrollDispatchModule
+        ScrollDispatchModule,
     ],
     providers: [],
     bootstrap: [AppComponent]

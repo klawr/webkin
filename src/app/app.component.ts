@@ -1,5 +1,4 @@
 import { Component } from '@angular/core';
-import { g2 } from 'g2d';
 import { Subject } from 'rxjs';
 
 @Component({
@@ -9,5 +8,4 @@ import { Subject } from 'rxjs';
 })
 export class AppComponent {
     title = 'angular';
-    g = new Subject<g2>();
 }

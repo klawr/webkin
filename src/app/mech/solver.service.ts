@@ -1,4 +1,4 @@
-import { Loop, Variable } from "./mech.service";
+import { Loop, Variable } from "./mech.model";
 
 
 function nearlyEqual(a:number, b:number, epsilon:number): boolean
@@ -273,7 +273,7 @@ class Matrix extends Array<number[]> {
 
 export type LinSolve = (jacobi: Matrix, q_i: number[]) => number[];
 
-export function solver(d: LinSolve, loops: Loop[])
+export function solver(d: LinSolve, loops: ReadonlyArray<Loop>)
 {
     const vars = new Set<string>(
         loops.flatMap(loop => loop.filter(v => v.isUndefined).map(v => v.id))
@@ -410,7 +410,7 @@ function pack(q_i: [string, number][], speed?: number[], accel?: number[]): Solv
         }), Object.create(null) as SolveResult);
 }
 
-export function lrSolver(loops: Loop[])
+export function lrSolver(loops: ReadonlyArray<Loop>)
 {
     const impl: LinSolve = (jacobi, phi) => jacobi.invLR()
         .map((col) =>
@@ -420,7 +420,7 @@ export function lrSolver(loops: Loop[])
     return solver(impl, loops);
 }
 
-export function detSolver(loops: Loop[])
+export function detSolver(loops: ReadonlyArray<Loop>)
 {
     const impl: LinSolve = (jacobi, Phi) => jacobi.invDet()
         .map((col) =>
@@ -430,7 +430,7 @@ export function detSolver(loops: Loop[])
     return solver(impl, loops);
 }
 
-export function xySolver(loops: Loop[])
+export function xySolver(loops: ReadonlyArray<Loop>)
 {
     const impl: LinSolve = (jacobi, Phi) => jacobi.xy(Phi);
     return solver(impl, loops);
