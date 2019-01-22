@@ -9,7 +9,7 @@
         "experimentalDecorators": true,
         "declaration": false,
         "outDir": "./dist/out-tsc",
-        "target": "es5",
+        "target": "es2016",
         "downlevelIteration": true,
         "alwaysStrict": true,
         "importHelpers": true,
