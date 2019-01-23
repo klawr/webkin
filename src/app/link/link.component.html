@@ -1,0 +1,41 @@
+
+<mat-expansion-panel>
+    <mat-expansion-panel-header class="stretch">
+        <mat-panel-title>
+            {{link.id}}
+        </mat-panel-title>
+        <mat-panel-description>
+        </mat-panel-description>
+    </mat-expansion-panel-header>
+
+    <mat-form-field>
+        <input #linkId placeholder="Link ID" value={{link.id}} matInput>
+    </mat-form-field>
+
+    <mat-form-field>
+        <mat-select placeholder="Select connection">
+            <mat-option>Origin</mat-option>
+            <div *ngFor="let joint of (joints | async)">
+                <mat-option>
+                    {{joint}}
+                </mat-option>
+            </div>
+        </mat-select>
+    </mat-form-field>
+    <div *ngFor="let length of link.edgeLengths; index as idx">
+        <mat-form-field>
+            <input placeholder="Length {{idx + 1}}" matInput value="{{link.edgeLengths[idx]}}">
+        </mat-form-field>
+        <mat-form-field *ngIf="idx !== link.edgeLengths.length - 1; else newAngle">
+            <input placeholder="Angle {{idx + 1}}" matInput value="{{link.relAngles[idx]}}">
+        </mat-form-field>
+    </div>
+
+    <mat-slider color="accent" matTooltip="preview angle" matTooltipPosition="left" matTooltip="preview angle"
+        min="0" max="360" step="1" value="getAngle()" thumbLabel></mat-slider>
+    <mat-checkbox [checked]="link.absAngle !== undefined">angle fixed</mat-checkbox>
+</mat-expansion-panel>
+
+<ng-template #newAngle>
+    <button mat-button mat-stroked-button (click)="addEdge()">Add edge</button>
+</ng-template>

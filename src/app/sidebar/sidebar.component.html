@@ -9,50 +9,8 @@
 </mat-form-field>
 
 <mat-accordion>
-    <div *ngFor="let link of links; index as idx">
-        <mat-expansion-panel (opened)="panelOpenState = true" (closed)="panelOpenState = false" [disabled]="panelOpenState && linkId.value === ''">
-            <mat-expansion-panel-header class="stretch">
-                <mat-panel-title>
-                    {{linkId.value}}
-                </mat-panel-title>
-                <mat-panel-description>
-                </mat-panel-description>
-            </mat-expansion-panel-header>
-
-            <mat-form-field>
-                <input #linkId placeholder="Link ID" value={{link}} matInput>
-            </mat-form-field>
-
-            <mat-form-field>
-                <mat-select placeholder="Select connection">
-                    <mat-option>Origin</mat-option>
-                    <div *ngFor="let joint of joints">
-                        <mat-option *ngFor="let mp of joint; index as idx" [value]="mp">
-                            {{mp}} {{idx}}
-                        </mat-option>
-                    </div>
-                </mat-select>
-            </mat-form-field>
-            <br>
-            <mat-form-field>
-                <input #lengthInput placeholder="Length" matInput value="100">
-            </mat-form-field>
-            <mat-form-field>
-                <input #angleInput placeholder="Angle" matInput value="0">
-            </mat-form-field>
-            <div *ngFor="let length of linklength; index as idx">
-                <mat-form-field>
-                    <input #lengthInput placeholder="Length {{idx + 1}}" matInput value="100">
-                </mat-form-field>
-                <mat-form-field *ngIf="idx !== linklength.length - 1">
-                    <input #angleInput placeholder="Angle {{idx + 1}}" matInput value="0">
-                </mat-form-field>
-            </div>
-
-            <mat-slider color="accent" matTooltip="preview angle" matTooltipPosition="left" matTooltip="preview angle"
-                min="0" max="360" step="1" value="0" thumbLabel></mat-slider>
-            <mat-checkbox>angle fixed</mat-checkbox>
-        </mat-expansion-panel>
+    <div *ngFor="let link of (links | async)">
+        <app-link [link]="link"></app-link>
     </div>
     <mat-expansion-panel>
         <mat-expansion-panel-header>

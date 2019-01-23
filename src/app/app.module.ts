@@ -26,6 +26,7 @@ import { AppComponent } from './app.component';
 import { CanvasComponent } from './canvas/canvas.component';
 import { MechComponent } from './mech/mech.component';
 import { SidebarComponent } from './sidebar/sidebar.component';
+import { LinkComponent } from './link/link.component';
 
 @NgModule({
     declarations: [
@@ -33,6 +34,7 @@ import { SidebarComponent } from './sidebar/sidebar.component';
         CanvasComponent,
         MechComponent,
         SidebarComponent,
+        LinkComponent,
     ],
     imports: [
         StoreModule.forRoot({ mech: mechReducer }),

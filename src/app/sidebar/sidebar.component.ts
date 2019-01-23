@@ -4,6 +4,9 @@ import { AppState } from '../app.state';
 import { ExampleService } from '../mech/examples.service';
 import { JointId, Link } from '../mech/mech.model';
 import { ChangePhiMechanismStateAction } from '../mech/mech.actions';
+import { Observable } from 'rxjs';
+import { Dictionary } from '../mech/mech.reducer';
+import { map } from 'rxjs/operators';
 
 @Component({
     selector: 'app-sidebar',
@@ -22,24 +25,21 @@ export class SidebarComponent implements OnInit {
         this.exampleService.load(id);
     }
 
-    linklength = [] as number[];
-
-    links = [] as Link[];
-
-    angles = [] as number[];
-
-    joints = [] as JointId[];
-
     changePhi = (value: number) =>
     {
         const t = value / 180 * Math.PI;
         this.store.dispatch(new ChangePhiMechanismStateAction('a0', t));
     }
 
+    links: Observable<Link[]>;
+
+    angles = [] as number[];
+    linklength = [] as number[];
+    joints = [] as JointId[];
+
     addEdge()
     {
         this.linklength.push(0);
-        console.log(this.linklength);
     }
 
     abort()
@@ -47,8 +47,11 @@ export class SidebarComponent implements OnInit {
         this.linklength = [] as number[];
     }
 
+
     ngOnInit()
     {
+        const links = this.store.select(l => l.mech.links);
+        this.links = links.pipe(map(links => Object.keys(links).map(k => links[k])))
     }
 
 }

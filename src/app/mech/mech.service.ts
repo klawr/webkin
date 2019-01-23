@@ -16,6 +16,7 @@ export const selectPhi = (state: AppState) => state.mech.phi;
 export const selectMech = (state: AppState) => state.mech;
 export const selectLoops = createSelector(
     selectMech,
+    // Does not need a new mech when phi changes...
     (mech) => {
         function buildChain(joint: JointId)
         {
