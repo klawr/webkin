@@ -89,7 +89,8 @@ export class MechComponent implements OnInit
                 // @ts-ignore
                 rcmds.ply({pts,ld:g2.symbol.dashdot});
             }
-            // rcmds.label({str:link.id});
+            // @ts-ignore
+            rcmds.label({str:link.id, font:"25px", fs:"#fff"});
 
             const mounts = pts.slice(1);
             marked.set(link.id, mounts);

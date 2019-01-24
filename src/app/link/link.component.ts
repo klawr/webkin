@@ -1,10 +1,10 @@
 import { Component, OnInit, Input } from '@angular/core';
-import { Link } from '../mech/mech.model';
+import { Link, Mountpoint } from '../mech/mech.model';
 import { Store } from '@ngrx/store';
 import { AppState } from '../app.state';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { MutateLinkAction } from '../mech/mech.actions';
+import { MutateLinkAction, DefineLinkAction } from '../mech/mech.actions';
 
 @Component({
     selector: 'app-link',
@@ -14,39 +14,72 @@ import { MutateLinkAction } from '../mech/mech.actions';
 export class LinkComponent implements OnInit {
     @Input() link: Link
 
-    backup: Link;
-
     constructor(
         public readonly store: Store<AppState>
     ) { }
 
-    // TODO: Preview angle should be aligned with absAngle
-
     joints: Observable<{ id: string, mpIds: Iterable<number> }[]>;
+    id: string;
     edgeLengths = [] as number[];
     relAngles = [] as number[];
     selected: string;
-    addEdge() {
+
+    addEdge()
+    {
         this.edgeLengths.push(0);
         this.relAngles.push(0);
-        console.log(this.edgeLengths.length);
+    }
+    removeEdge()
+    {
+        this.edgeLengths.pop();
+        this.relAngles.pop();
     }
 
-    update(id: string, preview: number)
+    alterValue(length: boolean, idx: number, val: string)
+    {
+        const arr = length ? this.edgeLengths : this.relAngles;
+        arr[idx] = +val;
+    }
+
+    buildLink(id: string)
     {
         const mp = this.selected ? this.selected.split(' - ') : undefined;
-        this.store.dispatch(new MutateLinkAction(id, {
-            id: id,
-            absAngle: preview,
+        return {
+            id,
             edgeLengths: this.edgeLengths,
             relAngles: this.relAngles,
-            joint: this.selected ? {linkId: mp[0], mountId: +mp[1] } : undefined,
-        }))
+            joint: mp ? {linkId: mp[0], mountId: +mp[1] } : undefined,
+            points: [] as Mountpoint[]
+        };
     }
 
-    abort()
+    defineLink(id: string)
     {
-        this.store.dispatch(new MutateLinkAction(this.backup.id, this.backup));
+        this.store.dispatch(new DefineLinkAction(this.buildLink(id)));
+        this.clearInputs(false);
+    }
+
+    mutateLink(id: string)
+    {
+        this.store.dispatch(new MutateLinkAction(this.link.id, this.buildLink(id)));
+    }
+
+    clearInputs(e: boolean)
+    {
+        if (e)
+        {
+            this.id = this.link.id;
+            this.selected = this.link.joint ? this.link.joint.linkId + ' - ' + this.link.joint.mountId : undefined;
+            this.edgeLengths = [...this.link.edgeLengths];
+            this.relAngles = [...this.link.relAngles];
+        }
+        else
+        {
+            this.id = "";
+            this.selected = undefined;
+            this.edgeLengths = [0];
+            this.relAngles = [];
+        }
     }
 
     ngOnInit()
@@ -60,17 +93,6 @@ export class LinkComponent implements OnInit {
                 }
             })
         ));
-        if (this.link) {
-            this.backup =  Object.assign({}, this.link);
-
-            this.selected = this.link.joint ? this.link.joint.linkId + ' - ' + this.link.joint.mountId : undefined;
-            this.edgeLengths = [...this.link.edgeLengths];
-            this.relAngles = [...this.link.relAngles];
-
-        }
-        else
-        {
-            this.edgeLengths.push(0);
-        }
+        this.clearInputs(!!this.link);
     }
 }

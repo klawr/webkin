@@ -1,4 +1,3 @@
-
 <mat-expansion-panel>
     <mat-expansion-panel-header class="stretch">
         <mat-panel-title>
@@ -9,7 +8,7 @@
     </mat-expansion-panel-header>
 
     <mat-form-field>
-        <input #linkId placeholder="Link ID" value={{link?.id}} matInput>
+        <input #linkId placeholder="Link ID" value={{id}} matInput>
     </mat-form-field>
 
     <mat-form-field>
@@ -24,10 +23,10 @@
     </mat-form-field>
     <div *ngFor="let length of edgeLengths; index as idx">
         <mat-form-field>
-            <input placeholder="Length {{idx + 1}}" matInput value="{{edgeLengths[idx]}}">
+            <input #edgeLength placeholder="Length {{idx + 1}}" matInput value="{{edgeLengths[idx]}}" (change)="alterValue(true, idx, edgeLength.value)">
         </mat-form-field>
         <mat-form-field *ngIf="idx !== edgeLengths.length - 1; else newAngle">
-            <input placeholder="Angle {{idx + 1}}" matInput value="{{relAngles[idx]}}">
+            <input #relAngle placeholder="Angle {{idx + 1}}" matInput value="{{relAngles[idx]}}" (change)="alterValue(false, idx, relAngle.value)">
         </mat-form-field>
     </div>
 
@@ -36,14 +35,21 @@
     <mat-checkbox [checked]="absAngle !== undefined">angle fixed</mat-checkbox>
 
     <div>
-        <button mat-stroked-button mat-button color="warn" (click)="abort()">Abort</button>
-        <button mat-stroked-button mat-button color="accent" (click)="update(linkId.value, previewAngle.value)">Update</button>
+        <button mat-stroked-button mat-button color="warn" (click)="clearInputs(!!link)">Abort</button>
+            <button *ngIf="link; else newLink" mat-stroked-button mat-button color="accent" (click)="mutateLink(linkId.value, previewAngle.value)">
+                Update
+            </button>
+
     </div>
 </mat-expansion-panel>
 
-<ng-template #newAngle>
-    <button mat-button mat-stroked-button (click)="addEdge()">Add edge</button>
+<ng-template #newLink>
+    <button [disabled]="linkId.value === ''" mat-stroked-button mat-button color="accent" (click)="defineLink(linkId.value, previewAngle.value)">
+        Create
+    </button>
 </ng-template>
 
-
-
+<ng-template #newAngle>
+    <button mat-button mat-stroked-button (click)="addEdge()">Add edge</button>
+    <button mat-button mat-stroked-button (click)="removeEdge()" color="warn" *ngIf="edgeLengths.length > 1">Remove</button>
+</ng-template>
