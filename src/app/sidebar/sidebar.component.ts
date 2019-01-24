@@ -2,11 +2,10 @@ import { Component, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { AppState } from '../app.state';
 import { ExampleService } from '../mech/examples.service';
-import { JointId, Link } from '../mech/mech.model';
-import { ChangePhiMechanismStateAction } from '../mech/mech.actions';
+import { Link } from '../mech/mech.model';
 import { Observable } from 'rxjs';
-import { Dictionary } from '../mech/mech.reducer';
 import { map } from 'rxjs/operators';
+import { ClearLinkAction } from '../mech/mech.actions';
 
 @Component({
     selector: 'app-sidebar',
@@ -24,34 +23,17 @@ export class SidebarComponent implements OnInit {
     {
         this.exampleService.load(id);
     }
-
-    changePhi = (value: number) =>
+    clear()
     {
-        const t = value / 180 * Math.PI;
-        this.store.dispatch(new ChangePhiMechanismStateAction('a0', t));
+        this.store.dispatch(new ClearLinkAction());
     }
 
     links: Observable<Link[]>;
 
-    angles = [] as number[];
-    linklength = [] as number[];
-    joints = [] as JointId[];
-
-    addEdge()
-    {
-        this.linklength.push(0);
-    }
-
-    abort()
-    {
-        this.linklength = [] as number[];
-    }
-
-
     ngOnInit()
     {
         const links = this.store.select(l => l.mech.links);
-        this.links = links.pipe(map(links => Object.keys(links).map(k => links[k])))
+        this.links = links.pipe(map(links => Object.keys(links).map(k => links[k])));
     }
 
 }

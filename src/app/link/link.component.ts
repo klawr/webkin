@@ -12,7 +12,7 @@ import { MutateLinkAction, DefineLinkAction } from '../mech/mech.actions';
     styleUrls: ['./link.component.css']
 })
 export class LinkComponent implements OnInit {
-    @Input() link: Link
+    @Input() link: Link;
 
     constructor(
         public readonly store: Store<AppState>

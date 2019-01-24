@@ -23,6 +23,19 @@ const examples: Dictionary<MechState> = {
         }],
         phi: ['a0', 0]
     },
+    Fourbar: {
+        links: {
+            'A0A': sanitizeLink({ id: 'A0A', edgeLengths: [Math.SQRT2 * 100], relAngles: [], points: []}),
+            'AB':  sanitizeLink({ id: 'AB',  edgeLengths: [200,Math.sqrt(5)*100], relAngles: [Math.atan2(1,2)], points: [], joint: {linkId: 'A0A', mountId: 0}}),
+            'B0B': sanitizeLink({ id: 'B0B', edgeLengths: [300], relAngles: [], points: [], joint: {linkId: 'GND', mountId: 0}}),
+            'GND': sanitizeLink({ id: 'GND', edgeLengths: [500], relAngles: [], points: [], absAngle:Math.atan2(300,400)})
+        },
+        loops: [{
+            left: {linkId: 'AB', mountId: 0},
+            right: {linkId: 'B0B', mountId: 0}
+        }],
+        phi: ['A0A', 0]
+    }
 }
 
 @Injectable({

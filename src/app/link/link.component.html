@@ -12,7 +12,7 @@
     </mat-form-field>
 
     <mat-form-field>
-        <mat-select #kopf placeholder="Connection" [(value)]="selected">
+        <mat-select placeholder="Connection" [(value)]="selected">
             <mat-option>Origin</mat-option>
             <div *ngFor="let joint of (joints | async)">
                 <mat-option *ngFor="let idx of joint.mpIds" value="{{joint.id}} - {{idx}}">
@@ -32,7 +32,7 @@
 
     <mat-slider #previewAngle color="accent" matTooltip="preview angle" matTooltipPosition="left" matTooltip="preview angle"
         min="0" max="360" step="1" value="getAngle()" thumbLabel></mat-slider>
-    <mat-checkbox [checked]="absAngle !== undefined">angle fixed</mat-checkbox>
+    <mat-checkbox [checked]="link?.absAngle !== undefined">angle fixed</mat-checkbox>
 
     <div>
         <button mat-stroked-button mat-button color="warn" (click)="clearInputs(!!link)">Abort</button>

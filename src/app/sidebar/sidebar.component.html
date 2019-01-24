@@ -2,6 +2,7 @@
 
 <mat-form-field class="stretch">
     <mat-select placeholder="Webkinematik">
+        <mat-option (click)="clear()">New Mechanism</mat-option>
         <mat-option *ngFor="let example of exampleService.ids" [value]="example" (click)="loadMech(example)">
             {{example}}
         </mat-option>
@@ -12,5 +13,8 @@
     <app-link *ngFor="let link of (links | async)" [link]="link"></app-link>
     <app-link></app-link>
 </mat-accordion>
+<br>
+<hr>
+<br>
+<app-solver></app-solver>
 
-<mat-slider #phiSlider color="primary" class="stretch" min="0" max="360" step="1" value="0" thumbLabel (input)="changePhi(phiSlider.value)"></mat-slider>
