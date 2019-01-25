@@ -29,9 +29,9 @@ export function sanitizeLink(link: Link): Link
 {
     let edgeLengths = link.edgeLengths;
     const points: Mountpoint[] = [];
-    if (typeof edgeLengths === 'undefined')
+    if (typeof edgeLengths === 'undefined' || edgeLengths.length === 0)
     {
-        points.push(fac({}));
+        points.push(fac({ angleOffset: 0 }));
         edgeLengths = [];
     }
     else

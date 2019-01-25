@@ -366,7 +366,7 @@ function speed(loops: Loop[], J: Matrix, s: string)
     const phi_ = loops.flatMap(l => l.filter(v => v.id === s)
         .map(v => {
             const angle = v.absAngle + v.angleOffset;
-            return [ v.length * Math.sin(angle), -v.length * Math.cos(angle) ];
+            return [ -v.length * Math.sin(angle), v.length * Math.cos(angle) ];
         })
         .reduce((l, r) => [ l[0] + r[0], l[1] + r[1] ], [0, 0])
     );
@@ -386,7 +386,7 @@ function accel(loops: Loop[], J: Matrix, q_r: SolveResult): number[]
         ]).map((cell) => [
             cell[0] * Math.cos(cell[1]) * cell[2] * cell[2],
             cell[0] * Math.sin(cell[1]) * cell[2] * cell[2]
-        ]).reduce((l, r) => [ l[0] + r[0], l[1] + r[1] ], [0, 0]));
+        ]).reduce((l, r) => [ l[0] - r[0], l[1] - r[1] ], [0, 0]));
 
     return J.xy(phi__).concat(0);
 }

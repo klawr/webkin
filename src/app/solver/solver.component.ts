@@ -25,10 +25,6 @@ export class SolverComponent implements OnInit {
     from: string;
     to: string;
 
-        test(l: any){
-            console.log(l);
-        }
-
     changePhi = (phi: string, value: number) =>
     {
         const t = value / 180 * Math.PI;
