@@ -2,7 +2,7 @@
 import { Action } from '@ngrx/store';
 import { fac, fdac } from '../utils';
 import { ClearLinkAction, LinkActions, LinkActionTypes, LoopActions, LoopActionTypes, UndefineLinkAction, MechanismStateActionType, ReplaceMechanismStateAction, MechanismStateActions } from './mech.actions';
-import { Link, LoopDefinition, Mountpoint } from './mech.model';
+import { Link, LoopDefinition, Mountpoint, SolveResults, Variable, Loop, JointId } from './mech.model';
 
 export interface Dictionary<T>
 {
@@ -13,14 +13,19 @@ export interface FuncDictionary<T>
     [id: number]: T;
 }
 
+export type DeeplyReadonly<T> = { readonly [P in keyof T]: Readonly<T[P]>; }
+
 export interface MechState
 {
-    phi?: [string, number];
-    links: Dictionary<Link>;
-    loops: FuncDictionary<LoopDefinition>;
+    readonly phi?: DeeplyReadonly<[string, number]>;
+    readonly solveResults: DeeplyReadonly<SolveResults>;
+    readonly links: DeeplyReadonly<Dictionary<Link>>;
+    readonly loops: DeeplyReadonly<FuncDictionary<LoopDefinition>>;
+    readonly loopCache?: DeeplyReadonly<Loop[]>
 }
 
 const initialState: MechState = Object.freeze({
+    solveResults: Object.freeze([]) as SolveResults,
     links: Object.freeze(Object.create(null)),
     loops: Object.freeze([])
 });
@@ -128,23 +133,88 @@ export function loopReducer(
     }
 }
 
+function reduceLoops(links: DeeplyReadonly<Dictionary<Link>>, defs: DeeplyReadonly<FuncDictionary<LoopDefinition>>): DeeplyReadonly<Loop[]>
+{
+    function formLoop(left: ReadonlyArray<Variable>, right: ReadonlyArray<Variable>): Loop
+    {
+        return [...left, ...right.map((e) => e.invert())]
+    }
+
+    function buildChain(joint: JointId)
+    {
+        let e = links[joint.linkId];
+        let mp = e.points[joint.mountId];
+        const s = [new Variable(joint.linkId, mp.angleOffset, e.absAngle, mp.length)];
+        while (joint = e.joint)
+        {
+            e = links[joint.linkId];
+            mp = e.points[joint.mountId];
+            s.unshift(new Variable(joint.linkId, mp.angleOffset, e.absAngle, mp.length));
+        }
+        return Object.freeze(s);
+    }
+
+    try
+    {
+        const loops: Loop[] = [];
+        for (const k in defs)
+        {
+            const loopIds = defs[k];
+            const left  = buildChain(loopIds.left);
+            const right = buildChain(loopIds.right);
+
+            loops.push(formLoop(left, right));
+        }
+        Object.freeze(loops);
+        return loops;
+    }
+    catch (err)
+    {
+        return undefined;
+    }
+}
+
 export function mechReducer(state = initialState, action: MechanismStateActions)
 {
     switch (action.type)
     {
+        case MechanismStateActionType.UpdateSolveResults: {
+            return fac(state, { solveResults: action.data });
+        }
         case MechanismStateActionType.Replace: {
-            return fac(action.data);
+            let loopCache;
+            if (action.data.loops !== state.loops || action.data.links !== state.links)
+            {
+                loopCache = reduceLoops(action.data.links, action.data.loops);
+            }
+
+            return fac(action.data, { loopCache, solveResults: Object.freeze([]) });
         }
         case MechanismStateActionType.ChangePhi: {
             return fac(state, {
                 phi: Object.freeze([action.id, action.angle])
             });
         }
-        default:
-            return fac(state, {
-                links: linkReducer(state.links, action as LinkActions),
-                loops: loopReducer(state.loops, action as LoopActions)
-            });
+        default: {
+            const links = linkReducer(state.links, action as LinkActions);
+            const loops = loopReducer(state.loops, action as LoopActions);
+
+            if (loops !== state.loops || links !== state.links)
+            {
+                const loopCache = reduceLoops(links, loops);
+
+                return fac(state, {
+                    links,
+                    loops,
+                    loopCache,
+                    solveResults: Object.freeze([]),
+                });
+            }
+            else
+            {
+                return state;
+            }
+        }
     }
 }
 

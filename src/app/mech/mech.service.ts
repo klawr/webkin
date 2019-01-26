@@ -1,50 +1,17 @@
 import { Injectable } from '@angular/core';
 import { createSelector, Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, filter, distinctUntilChanged } from 'rxjs/operators';
 import { AppState } from '../app.state';
-import { JointId, Loop, Variable } from './mech.model';
-import { SolveResult, xySolver } from './solver.service';
-import { MechState } from './mech.reducer';
+import { JointId, Loop, Variable, SolveResult } from './mech.model';
+import { xySolver, nearlyEqual } from './solver.service';
+import { MechState, Dictionary } from './mech.reducer';
+import { SolveResultsUpdateAction } from './mech.actions';
 
-function formLoop(left: ReadonlyArray<Variable>, right?: ReadonlyArray<Variable>): Loop
-{
-    return [...left, ...right.map((e) => e.invert())]
-}
+
 
 export const selectPhi = (state: AppState) => state.mech.phi;
 export const selectMech = (state: AppState) => state.mech;
-export const selectLoops = createSelector(
-    selectMech,
-    // Does not need a new mech when phi changes...
-    (mech) => {
-        function buildChain(joint: JointId)
-        {
-            let e = mech.links[joint.linkId];
-            let mp = e.points[joint.mountId];
-            const s = [new Variable(joint.linkId, mp.angleOffset, e.absAngle, mp.length)];
-            while (joint = e.joint)
-            {
-                e = mech.links[joint.linkId];
-                mp = e.points[joint.mountId];
-                s.unshift(new Variable(joint.linkId, mp.angleOffset, e.absAngle, mp.length));
-            }
-            return Object.freeze(s);
-        }
-
-        const loops: Loop[] = [];
-        for (const k in mech.loops)
-        {
-            const loopIds = mech.loops[k];
-            const left  = buildChain(loopIds.left);
-            const right = buildChain(loopIds.right);
-
-            loops.push(formLoop(left, right));
-        }
-        return Object.freeze([mech, Object.freeze(loops)]) as [MechState, ReadonlyArray<Loop>];
-    }
-);
-
 function exhaust<T>(it: IterableIterator<T>, max: number)
 {
     let val;
@@ -66,22 +33,65 @@ function exhaust<T>(it: IterableIterator<T>, max: number)
 @Injectable({providedIn: 'root'})
 export class MechanismService
 {
-    readonly loops: Observable<[MechState, ReadonlyArray<Loop>]>;
-    readonly solveResult: Observable<[MechState, SolveResult]>;
-
     constructor(private readonly store: Store<AppState>)
     {
-        this.loops = this.store.select(selectLoops);
-        this.solveResult = this.loops.pipe(
-            map(([mech, loops]) => {
-                // TODO preconditions for solver
-                if (!mech.phi || loops.length === 0)
+        this.store.select(selectMech).pipe(
+            filter(m => !!m.loopCache && m.loopCache.length > 0),
+            distinctUntilChanged((l, r) => l.loopCache === r.loopCache && l.phi === r.phi)
+        ).subscribe(m => {
+            const ins = [...m.solveResults];
+            const solver = xySolver(m.loopCache as any);
+
+            let t = -performance.now();
+            let results: SolveResult[] = [];
+            for (let i = 0; i < 128; ++i)
+            {
+                results[i] = exhaust(solver(m.phi, ins[i]), 64);
+            }
+
+            const varLinkIds = Object.keys(results.find(r => !!r) || {});
+            if (!varLinkIds.length)
+            {
+                return;
+            }
+            varLinkIds.sort();
+
+            const isAngle = varLinkIds.reduce((map, k) => ({...map, [k]: m.links[k].absAngle === undefined }), {} as Dictionary<boolean>);
+
+            function comp(l: SolveResult, r: SolveResult)
+            {
+                for (const k of varLinkIds)
                 {
-                    return [mech, Object.create(null)] as [MechState, SolveResult];
+                    const diff = l[k].q - r[k].q;
+                    if (Math.abs(diff) > 1e-2)
+                    {
+                        return diff;
+                    }
                 }
-                // TODO var exhaust
-                return [mech, exhaust(xySolver(loops)(mech.phi), 1000)] as [MechState, SolveResult]
+                return 0;
+            }
+
+            results.forEach(r => r && varLinkIds.forEach(k => {
+                if (isAngle[k])
+                {
+                    r[k].q %= 2 * Math.PI;
+                    if (r[k].q < 0)
+                    {
+                        r[k].q += 2 * Math.PI;
+                    }
+                }
+            }));
+
+            results.sort(comp);
+            const numResults = results.findIndex((v) => !v);
+            numResults >= 0 && (results.length = numResults);
+
+            results = results.filter(function(item, pos, self) {
+                return self.findIndex((v) => comp(v, item) === 0) === pos;
             })
-        );
+
+            console.log(`found ${results.length} results in ${t + performance.now()}`)
+            this.store.dispatch(new SolveResultsUpdateAction(results));
+        });
     }
 }

@@ -50,3 +50,14 @@ export interface LoopDefinition
 export interface Loop extends Array<Variable>
 {
 }
+
+export interface SolveResult
+{
+    [linkName: string]: {
+        q: number,
+        v?: number,
+        a?: number,
+    };
+}
+
+export type SolveResults = SolveResult[];

@@ -11,6 +11,7 @@ function cos(a:number,b:number,c:number)
 
 const examples: Dictionary<MechState> = {
     Stephenson2: {
+        solveResults: [],
         links: {
             'g0': sanitizeLink({ id:'g0', edgeLengths: [300], absAngle: 0, relAngles: [], points: []}),
             'a0': sanitizeLink({ id:'a0', edgeLengths: [100], relAngles: [], points: []}),
@@ -29,6 +30,7 @@ const examples: Dictionary<MechState> = {
         phi: ['a0', 0]
     },
     Stephenson2_Linear: {
+        solveResults: [],
         links: {
             'r1': sanitizeLink({ id:'r1', edgeLengths: [100], absAngle: Math.PI/2, relAngles: [], points: [], joint: {linkId:'r6', mountId:0} }),
             'r2': sanitizeLink({ id:'r2', edgeLengths: [180,180], relAngles: [2], points: []}),
@@ -47,6 +49,7 @@ const examples: Dictionary<MechState> = {
         phi: ['r2',Math.PI/4]
     },
     Fourbar: {
+        solveResults: [],
         links: {
             'A0A': sanitizeLink({ id: 'A0A', edgeLengths: [Math.SQRT2 * 100], relAngles: [], points: []}),
             'AB':  sanitizeLink({ id: 'AB',  edgeLengths: [200,Math.sqrt(5)*100], relAngles: [Math.atan2(1,2)], points: [], joint: {linkId: 'A0A', mountId: 0}}),
@@ -60,6 +63,7 @@ const examples: Dictionary<MechState> = {
         phi: ['A0A', 0]
     },
     CouplingGear: {
+        solveResults: [],
         links: {
             'g0': sanitizeLink({ id: 'g0', edgeLengths: [Math.hypot(300,450), Math.hypot(300,550)], absAngle: Math.atan2(11,6), relAngles: [cos(Math.hypot(6,9),Math.hypot(6,11),2)], points: [] }),
             'r5': sanitizeLink({ id: 'r5', edgeLengths: [300], relAngles: [], points: [], joint: {linkId: 'g0', mountId: 0} }),

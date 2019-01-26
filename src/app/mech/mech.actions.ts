@@ -1,6 +1,6 @@
 import { Action } from '@ngrx/store';
 
-import { Link, LoopDefinition } from './mech.model'
+import { Link, LoopDefinition, SolveResults } from './mech.model'
 import { MechState } from './mech.reducer';
 
 export enum LinkActionTypes
@@ -88,6 +88,7 @@ export enum MechanismStateActionType
 {
     ChangePhi = 'mech/mechanismstate/changePhi',
     Replace = 'mech/mechanismstate/replace',
+    UpdateSolveResults = 'mech/solve-result/update',
 }
 
 export class ReplaceMechanismStateAction implements Action
@@ -102,8 +103,16 @@ export class ChangePhiMechanismStateAction implements Action
     constructor(public readonly id: string, public readonly angle: number) {}
 }
 
+export class SolveResultsUpdateAction implements Action
+{
+    readonly type = MechanismStateActionType.UpdateSolveResults;
+
+    constructor(public readonly data: SolveResults) { }
+}
+
 export type MechanismStateActions
     = ReplaceMechanismStateAction
     | ChangePhiMechanismStateAction
+    | SolveResultsUpdateAction
     | LoopActions
     | LinkActions;

@@ -2508,10 +2508,6 @@ fstream@^1.0.0, fstream@^1.0.2:
     mkdirp ">=0.5 0"
     rimraf "2"
 
-"g2d@..\\..\\HiWi\\g2\\g2d-2.5.2.tgz":
-  version "2.5.2"
-  resolved "..\\..\\HiWi\\g2\\g2d-2.5.2.tgz#dfa0296bf0f9026de7d1aa7e86aae5aa1e0320a1"
-
 "g2d@..\\..\\HiWi\\g2\\g2d-2.5.3.tgz":
   version "2.5.3"
   resolved "..\\..\\HiWi\\g2\\g2d-2.5.3.tgz#bf10514017dcf7af844517a3c202efd28700aec0"

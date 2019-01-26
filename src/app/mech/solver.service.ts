@@ -1,7 +1,7 @@
-import { Loop, Variable } from "./mech.model";
+import { Loop, Variable, SolveResult } from "./mech.model";
 
 
-function nearlyEqual(a:number, b:number, epsilon:number): boolean
+export function nearlyEqual(a:number, b:number, epsilon:number): boolean
 {
     const absA = Math.abs(a);
     const absB = Math.abs(b);
@@ -318,8 +318,13 @@ export function solver(d: LinSolve, loops: ReadonlyArray<Loop>)
     }
 
     const rnd = () => [...vars].reduce((o, v) => ({ ...o, [v]: { q: Math.random() * Math.PI * 2 } }), Object.create(null) as SolveResult);
-    return function* solve(s: [string, number], q_in: SolveResult = rnd())
+    return function* solve(s: [string, number], q_in?: SolveResult)
     {
+        if (q_in === undefined)
+        {
+            q_in = rnd()
+        }
+
         const _loops = loops.slice().map(loop => loop.map(v => {
             if (v.id !== s[0])
             {
@@ -389,15 +394,6 @@ function accel(loops: Loop[], J: Matrix, q_r: SolveResult): number[]
         ]).reduce((l, r) => [ l[0] - r[0], l[1] - r[1] ], [0, 0]));
 
     return J.xy(phi__).concat(0);
-}
-
-export interface SolveResult
-{
-    [linkName: string]: {
-        q: number,
-        v?: number,
-        a?: number,
-    };
 }
 
 function pack(q_i: [string, number][], speed?: number[], accel?: number[]): SolveResult

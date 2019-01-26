@@ -2,11 +2,11 @@ import { Component, OnInit } from '@angular/core';
 import { g2 } from 'g2d';
 import { Observable } from 'rxjs';
 import { MechanismService } from "./mech.service";
-import { SolveResult } from "./solver.service";
-import { map, filter } from 'rxjs/operators';
-import { MechState } from './mech.reducer';
-import { Link } from './mech.model';
-import { InternalFormsSharedModule } from '@angular/forms/src/directives';
+import { map, filter, distinctUntilChanged, withLatestFrom } from 'rxjs/operators';
+import { Dictionary } from './mech.reducer';
+import { Link, SolveResult, SolveResults } from './mech.model';
+import { AppState } from '../app.state';
+import { Store } from '@ngrx/store';
 
 
 @Component({
@@ -19,11 +19,14 @@ export class MechComponent implements OnInit
     renderCommands: Observable<g2>;
 
     constructor(
+        private store: Store<AppState>,
         private mechService: MechanismService
     ) {
-        this.renderCommands = this.mechService.solveResult.pipe(
-            filter(([_, result]) => result !== undefined),
-            map(rx => this.render(...rx))
+        this.renderCommands = this.store.select(s => s.mech.solveResults).pipe(
+            distinctUntilChanged(),
+            filter(r => r && r.length > 0),
+            withLatestFrom(this.store.select(s => s.mech.links).pipe(distinctUntilChanged())),
+            map(([results, links]) => this.renderCombine(links, results))
         );
     }
 
@@ -32,9 +35,18 @@ export class MechComponent implements OnInit
     }
 
     // Multi q_i
-    private render(mec: MechState, q_i: SolveResult)
+    private renderCombine(links: Dictionary<Link>, q_i: SolveResults)
     {
         const rcmds = g2().view({x:650,y:400,cartesian:true});
+
+        [...q_i].reverse().forEach(v => this.render(links, v, rcmds, '#fff')) // TODO: colors
+
+        rcmds.gnd({});
+        return rcmds;
+    }
+
+    private render(links: Dictionary<Link>, q_i: SolveResult, rcmds: g2, color: string)
+    {
         const marked = new Map<string, RenderInfo[]>();
 
         function getAngle(link: Link)
@@ -43,7 +55,7 @@ export class MechComponent implements OnInit
         }
         function getFirstLength(link: Link)
         {
-            return link.edgeLengths.length ? link.edgeLengths[0] : q_i[link.id].q;
+            return link.edgeLengths.length ? link.edgeLengths[0] : -q_i[link.id].q;
         }
 
         function fixed(link: Link)
@@ -88,7 +100,7 @@ export class MechComponent implements OnInit
                 acceleration: { x:0, y:0 }
             };
             if (link.joint) {
-                start = renderLink(mec.links[link.joint.linkId])[link.joint.mountId];
+                start = renderLink(links[link.joint.linkId])[link.joint.mountId];
             }
 
             const angle = getAngle(link);
@@ -124,9 +136,9 @@ export class MechComponent implements OnInit
 
             const mounts = info.slice(1);
             marked.set(link.id, mounts);
-        return mounts;
+            return mounts;
         }
-        Object.values(mec.links).forEach(renderLink);
+        Object.values(links).forEach(renderLink);
         function getVec(a: Vector2, b: Vector2)
         {
             return {
@@ -138,10 +150,8 @@ export class MechComponent implements OnInit
         }
         marked.forEach((m) => m.forEach(info =>
             rcmds.nod(info.coordinates)
-                .vec(getVec(info.coordinates, info.velocity)).label({str:`${Math.round(info.velocity.x)}, ${Math.round(info.velocity.y)}`})
+                //.vec(getVec(info.coordinates, info.velocity)).label({str:`${Math.round(info.velocity.x)}, ${Math.round(info.velocity.y)}`})
         ));
-        rcmds.gnd({});
-        return rcmds;
     }
 }
 
