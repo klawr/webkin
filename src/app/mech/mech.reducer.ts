@@ -4,6 +4,7 @@ import { fac, fdac } from '../utils';
 import * as dict from '../utils/dictionary';
 import { ClearLinkAction, LinkActions, LinkActionTypes, LoopActions, LoopActionTypes, UndefineLinkAction, MechanismStateActionType, ReplaceMechanismStateAction, MechanismStateActions } from './mech.actions';
 import { Link, LoopDefinition, Mountpoint, SolveResults, Variable, Loop, JointId } from './mech.model';
+import { SolverId } from './solver.service';
 
 export interface Dictionary<T>
 {
@@ -19,6 +20,8 @@ export type DeeplyReadonly<T> = { readonly [P in keyof T]: Readonly<T[P]>; }
 export interface MechState
 {
     readonly phi?: DeeplyReadonly<[string, number]>;
+    readonly solverId: SolverId;
+
     readonly solveResults: SolveResults;
     readonly links: dict.Dictionary<Link>;
     readonly loops: DeeplyReadonly<FuncDictionary<LoopDefinition>>;
@@ -27,6 +30,7 @@ export interface MechState
 
 const initialState: MechState = Object.freeze({
     solveResults: Object.freeze([]) as SolveResults,
+    solverId: SolverId.XySolver,
     links: Object.freeze(Object.create(null)),
     loops: Object.freeze([])
 });
@@ -192,6 +196,11 @@ export function mechReducer(state = initialState, action: MechanismStateActions)
         case MechanismStateActionType.ChangePhi: {
             return fac(state, {
                 phi: Object.freeze([action.id, action.angle])
+            });
+        }
+        case MechanismStateActionType.SwitchSolver: {
+            return fac(state, {
+                solverId: action.solverId,
             });
         }
         default: {

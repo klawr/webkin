@@ -6,7 +6,7 @@ import { map, filter, distinctUntilChanged } from 'rxjs/operators';
 import { AppState } from '../app.state';
 import * as dict from '../utils/dictionary';
 import { JointId, Loop, Variable, SolveResult, LinkInfo, Link, Vector2, SolveResults, LinkPointInfo, MechPointInfo } from './mech.model';
-import { xySolver, nearlyEqual, SolveFunc, MetaSolveFunc } from './solver.service';
+import { xySolver, nearlyEqual, SolveFunc, MetaSolveFunc, solver } from './solver.service';
 import { MechState, Dictionary } from './mech.reducer';
 import { SolveResultsUpdateAction } from './mech.actions';
 
@@ -43,7 +43,7 @@ export class MechanismService
         ).subscribe(m => {
             let t = -performance.now();
 
-            const results = [...this.solveFor(m.loopCache, xySolver)(m.phi)(m.solveResults)]
+            const results = [...this.solveFor(m.loopCache, solver[m.solverId])(m.phi)(m.solveResults)]
                 .map(r => MechanismService.deriveMechInfo(m.links, r));
 
             console.log(`found ${results.length} results in ${t + performance.now()}`)

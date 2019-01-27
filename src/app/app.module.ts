@@ -28,6 +28,7 @@ import { MechComponent } from './mech/mech.component';
 import { SidebarComponent } from './sidebar/sidebar.component';
 import { LinkComponent } from './link/link.component';
 import { SolverComponent } from './solver/solver.component';
+import { uiStateReducer } from './model/uistate.reducer';
 
 @NgModule({
     declarations: [
@@ -39,7 +40,10 @@ import { SolverComponent } from './solver/solver.component';
         SolverComponent,
     ],
     imports: [
-        StoreModule.forRoot({ mech: mechReducer }),
+        StoreModule.forRoot({
+            mech: mechReducer,
+            uiState: uiStateReducer,
+        }),
         BrowserAnimationsModule,
         BrowserModule,
         MatButtonModule,

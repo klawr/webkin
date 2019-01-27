@@ -2,6 +2,7 @@ import { Action } from '@ngrx/store';
 
 import { Link, LoopDefinition, SolveResults } from './mech.model'
 import { MechState } from './mech.reducer';
+import { SolverId } from './solver.service';
 
 export enum LinkActionTypes
 {
@@ -89,6 +90,7 @@ export enum MechanismStateActionType
     ChangePhi = 'mech/mechanismstate/changePhi',
     Replace = 'mech/mechanismstate/replace',
     UpdateSolveResults = 'mech/solve-result/update',
+    SwitchSolver = 'mech/solver/switch',
 }
 
 export class ReplaceMechanismStateAction implements Action
@@ -110,9 +112,17 @@ export class SolveResultsUpdateAction implements Action
     constructor(public readonly data: SolveResults) { }
 }
 
+export class SwitchSolverAction implements Action
+{
+    readonly type = MechanismStateActionType.SwitchSolver;
+
+    constructor(public readonly solverId: SolverId) { }
+}
+
 export type MechanismStateActions
     = ReplaceMechanismStateAction
     | ChangePhiMechanismStateAction
+    | SwitchSolverAction
     | SolveResultsUpdateAction
     | LoopActions
     | LinkActions;

@@ -34,12 +34,19 @@
     </mat-expansion-panel>
 </mat-accordion>
 <div>
-    <mat-slider #phiSlider [disabled]="!phi.value" class="stretch" color="primary" min="0" max="360" step="1" value="0"
+    <mat-slider #phiSlider [disabled]="(guideNotDefined | async)" class="stretch" color="primary" min="0" max="360" step="1" value="0"
         thumbLabel (input)="changePhi(phi.value, phiSlider.value)"></mat-slider>
     <mat-form-field>
-        <mat-select #phi placeholder="Guide">
-            <mat-option *ngFor="let link of (links | async)" value="{{link.id}}">
+        <mat-select #phi placeholder="Guide" [value]="(guide | async)">
+            <mat-option *ngFor="let link of (links | async)" [value]="link.id">
                 {{link.id}}
+            </mat-option>
+        </mat-select>
+    </mat-form-field>
+    <mat-form-field>
+        <mat-select placeholder="Select Solver" [value]="(selectedSolver | async)" (selectionChange)="onSolverChange($event)">
+            <mat-option *ngFor="let slvr of solver" [value]="slvr">
+                {{slvr}}
             </mat-option>
         </mat-select>
     </mat-form-field>

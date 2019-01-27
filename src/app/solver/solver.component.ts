@@ -3,9 +3,11 @@ import { AppState } from '../app.state';
 import { Store } from '@ngrx/store';
 import { map } from 'rxjs/operators';
 import { Observable } from 'rxjs';
-import { ChangePhiMechanismStateAction } from '../mech/mech.actions';
+import { ChangePhiMechanismStateAction, SwitchSolverAction } from '../mech/mech.actions';
 import { LoopDefinition, Link } from '../mech/mech.model';
 import { FuncDictionary, Dictionary } from '../mech/mech.reducer';
+import { SolverId } from '../mech/solver.service';
+import { MatSelectChange } from '@angular/material/select';
 @Component({
     selector: 'app-solver',
     templateUrl: './solver.component.html',
@@ -15,11 +17,18 @@ export class SolverComponent implements OnInit {
 
     constructor(
         public readonly store: Store<AppState>
-    ) { }
+    ) {
+        this.guide = this.store.select(l => l.mech.phi ? l.mech.phi[0] : null);
+        this.guideNotDefined = this.guide.pipe(map(g => g === null));
+        this.selectedSolver = this.store.select(s => s.mech.solverId);
+    }
 
     loops: Observable<FuncDictionary<LoopDefinition>>;
     links: Observable<Link[]>;
-    phi: Observable<string>;
+    guide: Observable<string>;
+    guideNotDefined: Observable<boolean>;
+    solver: string[] = Object.values(SolverId);
+    selectedSolver: Observable<SolverId>;
 
     joints: Observable<{ id: string, mpIds: Iterable<number> }[]>;
     from: string;
@@ -35,11 +44,14 @@ export class SolverComponent implements OnInit {
 
     }
 
+    onSolverChange(event: MatSelectChange)
+    {
+        this.store.dispatch(new SwitchSolverAction(event.value));
+    }
+
     ngOnInit() {
         this.loops = this.store.select(l => l.mech.loops);
 
-        const phi = this.store.select(l => l.mech.phi);
-        this.phi = phi.pipe(map(l => l[0]));
         const links = this.store.select(l => l.mech.links);
         this.links = links.pipe(map(links =>
             Object.keys(links).map(k =>

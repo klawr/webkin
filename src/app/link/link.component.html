@@ -21,6 +21,7 @@
             </div>
         </mat-select>
     </mat-form-field>
+    <br>
     <div *ngFor="let length of edgeLengths; index as idx">
         <mat-form-field>
             <input #edgeLength placeholder="Length {{idx + 1}}" matInput value="{{edgeLengths[idx]}}" (change)="alterValue(true, idx, edgeLength.value)">

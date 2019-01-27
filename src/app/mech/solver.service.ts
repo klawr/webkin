@@ -1,7 +1,12 @@
 import { Loop, Variable, SolveResult, LinkInfo } from "./mech.model";
 import * as dict from '../utils/dictionary';
 
-
+export enum SolverId
+{
+    DetSolver = 'det-solver',
+    LrSolver = 'LRP-solver',
+    XySolver = 'XY-solver',
+}
 
 export function nearlyEqual(a:number, b:number, epsilon:number): boolean
 {
@@ -275,7 +280,7 @@ class Matrix extends Array<number[]> {
 
 export type LinSolve = (jacobi: Matrix, q_i: number[]) => number[];
 
-export function solver(d: LinSolve, loops: ReadonlyArray<Loop>)
+export function metaSolver(d: LinSolve, loops: ReadonlyArray<Loop>)
 {
     const vars = new Set<string>(
         loops.flatMap(loop => loop.filter(v => v.isUndefined).map(v => v.id))
@@ -418,7 +423,7 @@ export function lrSolver(loops: ReadonlyArray<Loop>): SolveFunc
             col.reduce((acc, cur, idx) => acc -(cur * phi[idx]), 0)
     );
 
-    return solver(impl, loops);
+    return metaSolver(impl, loops);
 }
 
 export function detSolver(loops: ReadonlyArray<Loop>): SolveFunc
@@ -428,14 +433,20 @@ export function detSolver(loops: ReadonlyArray<Loop>): SolveFunc
             col.reduce((acc, cur, idx) => acc -(cur * Phi[idx]), 0)
     );
 
-    return solver(impl, loops);
+    return metaSolver(impl, loops);
 }
 
 export function xySolver(loops: ReadonlyArray<Loop>): SolveFunc
 {
     const impl: LinSolve = (jacobi, Phi) => jacobi.xy(Phi);
-    return solver(impl, loops);
+    return metaSolver(impl, loops);
 }
+
+export const solver = {
+    [SolverId.DetSolver]: detSolver,
+    [SolverId.LrSolver]: lrSolver,
+    [SolverId.XySolver]: xySolver,
+};
 
 export type SolveFunc = (guide: [string, number], q_in: SolveResult) => IterableIterator<SolveResult>;
 export type MetaSolveFunc = (loops: ReadonlyArray<Loop>) => SolveFunc;
