@@ -1,10 +1,12 @@
 import { Injectable } from '@angular/core';
 import { createSelector, Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
+import * as _ from 'lodash';
 import { map, filter, distinctUntilChanged } from 'rxjs/operators';
 import { AppState } from '../app.state';
-import { JointId, Loop, Variable, SolveResult } from './mech.model';
-import { xySolver, nearlyEqual } from './solver.service';
+import * as dict from '../utils/dictionary';
+import { JointId, Loop, Variable, SolveResult, LinkInfo, Link, Vector2, SolveResults, LinkPointInfo, MechPointInfo } from './mech.model';
+import { xySolver, nearlyEqual, SolveFunc, MetaSolveFunc } from './solver.service';
 import { MechState, Dictionary } from './mech.reducer';
 import { SolveResultsUpdateAction } from './mech.actions';
 
@@ -39,28 +41,35 @@ export class MechanismService
             filter(m => !!m.loopCache && m.loopCache.length > 0),
             distinctUntilChanged((l, r) => l.loopCache === r.loopCache && l.phi === r.phi)
         ).subscribe(m => {
-            const ins = [...m.solveResults];
-            const solver = xySolver(m.loopCache as any);
-
             let t = -performance.now();
-            let results: SolveResult[] = [];
-            for (let i = 0; i < 128; ++i)
-            {
-                results[i] = exhaust(solver(m.phi, ins[i]), 64);
-            }
 
-            const varLinkIds = Object.keys(results.find(r => !!r) || {});
-            if (!varLinkIds.length)
-            {
-                return;
-            }
-            varLinkIds.sort();
+            const results = [...this.solveFor(m.loopCache, xySolver)(m.phi)(m.solveResults)]
+                .map(r => MechanismService.deriveMechInfo(m.links, r));
 
-            const isAngle = varLinkIds.reduce((map, k) => ({...map, [k]: m.links[k].absAngle === undefined }), {} as Dictionary<boolean>);
+            console.log(`found ${results.length} results in ${t + performance.now()}`)
+            this.store.dispatch(new SolveResultsUpdateAction(results));
+        });
+    }
 
+    private solveFor(loops: ReadonlyArray<Loop>, solver: MetaSolveFunc)
+    {
+        const minTries = loops.reduce((l, r) => l + r.length, 0) ** 2;
+        const solve = solver(loops);
+
+        return function(guide: [string, number])
+        {
+            guide = [...guide] as [string, number];
+            const knownResults: SolveResults = [];
+
+            const varMap = new Map<string, Variable>(
+                _.sortBy(loops.flatMap(loop => loop
+                        .filter(v => v.isUndefined && v.id !== guide[0])
+                        .map(v => [v.id, v] as [string, Variable])), [0])
+            );
+            const vars = Object.freeze([...varMap.values()]);
             function comp(l: SolveResult, r: SolveResult)
             {
-                for (const k of varLinkIds)
+                for (const k of varMap.keys())
                 {
                     const diff = l[k].q - r[k].q;
                     if (Math.abs(diff) > 1e-2)
@@ -71,27 +80,146 @@ export class MechanismService
                 return 0;
             }
 
-            results.forEach(r => r && varLinkIds.forEach(k => {
-                if (isAngle[k])
+            const isAngle = vars.reduce(
+                (map, v) => ({...map, [v.id]: v.absAngle === undefined }),
+                {} as Dictionary<boolean>
+            );
+
+            return function* multiSolve(start: SolveResults)
+            {
+                start = [...start];
+                for (const r of knownResults)
                 {
-                    r[k].q %= 2 * Math.PI;
-                    if (r[k].q < 0)
+                    yield r;
+                }
+
+                const limit = start.length + minTries;
+                for (let i = 0; i < limit; ++i)
+                {
+                    let r = exhaust(solve(guide, start[i]), 32);
+                    if (r === undefined)
                     {
-                        r[k].q += 2 * Math.PI;
+                        continue;
+                    }
+
+                    // sanitize angles to [0, 2*PI]
+                    r = [...varMap.keys()].reduce((o, vid) => {
+                        let vr = r[vid];
+                        if (isAngle[vid])
+                        {
+                            let q = vr.q;
+                            q %= 2 * Math.PI;
+                            if (q < 0)
+                            {
+                                q += 2 * Math.PI;
+                            }
+                            vr = Object.freeze({...vr, q});
+                        }
+                        return dict.add(o, vid, vr);
+                    }, dict.create<LinkInfo>());
+
+                    r = dict.add(r, guide[0], {
+                        q: guide[1],
+                        v: 0,
+                        a: 0,
+                        points: []
+                    });
+
+                    if (knownResults.findIndex((cr) => comp(cr, r) === 0) === -1)
+                    {
+                        knownResults.push(r);
+                        yield r;
                     }
                 }
-            }));
+            }
+        }
+    }
 
-            results.sort(comp);
-            const numResults = results.findIndex((v) => !v);
-            numResults >= 0 && (results.length = numResults);
+    private static deriveMechInfo(links: dict.Dictionary<Link>, q_i: SolveResult)
+    {
+        function getAngle(link: Link, info: LinkInfo)
+        {
+            return link.absAngle === undefined ? info.q : link.absAngle;
+        }
+        function getFirstLength(link: Link, info: LinkInfo)
+        {
+            return link.edgeLengths.length ? link.edgeLengths[0] : -info.q;
+        }
 
-            results = results.filter(function(item, pos, self) {
-                return self.findIndex((v) => comp(v, item) === 0) === pos;
-            })
+        function newPoint(s: Vector2, len: number, angle: number)
+        {
+            return {
+                x: s.x + len * Math.cos(angle),
+                y: s.y + len * Math.sin(angle)
+            }
+        }
+        function newSpeed(v: Vector2, len: number, angle: number, linkInfo: LinkInfo)
+        {
+            return {
+                x: v.x - linkInfo.v * len * Math.sin(angle),
+                y: v.y + linkInfo.v * len * Math.cos(angle)
+            };
+        }
+        function newAccel(a: Vector2, len: number, angle: number, linkInfo: LinkInfo)
+        {
+            return {
+                x: a.x - linkInfo.a * len * Math.sin(angle) - linkInfo.v * linkInfo.v * len * Math.cos(angle),
+                y: a.y + linkInfo.a * len * Math.cos(angle) - linkInfo.v * linkInfo.v * len * Math.sin(angle)
+            };
+        }
 
-            console.log(`found ${results.length} results in ${t + performance.now()}`)
-            this.store.dispatch(new SolveResultsUpdateAction(results));
-        });
+        function computeLink(link: Link): LinkInfo
+        {
+            let info = q_i[link.id];
+            if (!info)
+            {
+                // fixed
+                q_i = dict.add(q_i, link.id, (info = {
+                    q: null,
+                    v: 0,
+                    a: 0,
+                    points: [],
+                }));
+            }
+            else if (info.points.length !== 0)
+            {
+                return info;
+            }
+
+            let start: MechPointInfo = {
+                coordinates: { x: 0, y: 0 },
+                velocity: { x:0, y: 0 },
+                acceleration: { x:0, y:0 }
+            };
+            if (link.joint) {
+                start = computeLink(links[link.joint.linkId]).points[link.joint.mountId];
+            }
+
+            const angle = getAngle(link, info);
+            const len = getFirstLength(link, info);
+            const points = info.points as MechPointInfo[];
+            points.push(start, {
+                coordinates: newPoint(start.coordinates, len, angle),
+                velocity: newSpeed(start.velocity, len, angle, info),
+                acceleration: newAccel(start.acceleration, len, angle, info)
+            });
+
+            for (let i = 1; i < link.points.length; ++i)
+            {
+                const p = link.points[i];
+                points.push({
+                    coordinates: newPoint(start.coordinates, p.length, angle + p.angleOffset),
+                    velocity: newSpeed(start.velocity, p.length, angle + p.angleOffset, info),
+                    acceleration: newAccel(start.acceleration, p.length, angle + p.angleOffset, info)
+                });
+            }
+
+            points.shift();
+            points.push(start);
+            return info;
+        }
+
+        dict.elems(links).forEach(computeLink);
+        return q_i;
     }
 }

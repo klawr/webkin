@@ -1,3 +1,4 @@
+import * as dict from '../utils/dictionary';
 
 export interface JointId
 {
@@ -51,13 +52,29 @@ export interface Loop extends Array<Variable>
 {
 }
 
-export interface SolveResult
+export interface LinkInfo
 {
-    [linkName: string]: {
-        q: number,
-        v?: number,
-        a?: number,
-    };
+    readonly q: number;
+    readonly v?: number;
+    readonly a?: number;
+    readonly points?: LinkPointInfo;
 }
+
+export type LinkPointInfo = ReadonlyArray<MechPointInfo>;
+
+export interface MechPointInfo
+{
+    readonly coordinates: Vector2;
+    readonly velocity: Vector2;
+    readonly acceleration: Vector2;
+}
+
+export interface Vector2
+{
+    readonly x: number;
+    readonly y: number;
+};
+
+export type SolveResult = dict.Dictionary<LinkInfo>;
 
 export type SolveResults = SolveResult[];

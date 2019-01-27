@@ -1,4 +1,6 @@
-import { Loop, Variable, SolveResult } from "./mech.model";
+import { Loop, Variable, SolveResult, LinkInfo } from "./mech.model";
+import * as dict from '../utils/dictionary';
+
 
 
 export function nearlyEqual(a:number, b:number, epsilon:number): boolean
@@ -317,7 +319,10 @@ export function solver(d: LinSolve, loops: ReadonlyArray<Loop>)
         }));
     }
 
-    const rnd = () => [...vars].reduce((o, v) => ({ ...o, [v]: { q: Math.random() * Math.PI * 2 } }), Object.create(null) as SolveResult);
+    const rnd = () => [...vars].reduce(
+        (o, v) => dict.add(o, v, { q: Math.random() * Math.PI * 2 }),
+        dict.create<LinkInfo>()
+    );
     return function* solve(s: [string, number], q_in?: SolveResult)
     {
         if (q_in === undefined)
@@ -398,15 +403,15 @@ function accel(loops: Loop[], J: Matrix, q_r: SolveResult): number[]
 
 function pack(q_i: [string, number][], speed?: number[], accel?: number[]): SolveResult
 {
-    return q_i.reduce((o, v, i) => ({
-        ...o, [v[0]]: {
+    return q_i.reduce((o, v, i) => dict.add(o, v[0], Object.freeze({
             q: v[1],
             v: speed && speed[i],
-            a: accel && accel[i] }
-        }), Object.create(null) as SolveResult);
+            a: accel && accel[i],
+            points: []
+    })), dict.create<LinkInfo>());
 }
 
-export function lrSolver(loops: ReadonlyArray<Loop>)
+export function lrSolver(loops: ReadonlyArray<Loop>): SolveFunc
 {
     const impl: LinSolve = (jacobi, phi) => jacobi.invLR()
         .map((col) =>
@@ -416,7 +421,7 @@ export function lrSolver(loops: ReadonlyArray<Loop>)
     return solver(impl, loops);
 }
 
-export function detSolver(loops: ReadonlyArray<Loop>)
+export function detSolver(loops: ReadonlyArray<Loop>): SolveFunc
 {
     const impl: LinSolve = (jacobi, Phi) => jacobi.invDet()
         .map((col) =>
@@ -426,8 +431,11 @@ export function detSolver(loops: ReadonlyArray<Loop>)
     return solver(impl, loops);
 }
 
-export function xySolver(loops: ReadonlyArray<Loop>)
+export function xySolver(loops: ReadonlyArray<Loop>): SolveFunc
 {
     const impl: LinSolve = (jacobi, Phi) => jacobi.xy(Phi);
     return solver(impl, loops);
 }
+
+export type SolveFunc = (guide: [string, number], q_in: SolveResult) => IterableIterator<SolveResult>;
+export type MetaSolveFunc = (loops: ReadonlyArray<Loop>) => SolveFunc;

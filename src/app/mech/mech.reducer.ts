@@ -1,6 +1,7 @@
 
 import { Action } from '@ngrx/store';
 import { fac, fdac } from '../utils';
+import * as dict from '../utils/dictionary';
 import { ClearLinkAction, LinkActions, LinkActionTypes, LoopActions, LoopActionTypes, UndefineLinkAction, MechanismStateActionType, ReplaceMechanismStateAction, MechanismStateActions } from './mech.actions';
 import { Link, LoopDefinition, Mountpoint, SolveResults, Variable, Loop, JointId } from './mech.model';
 
@@ -18,10 +19,10 @@ export type DeeplyReadonly<T> = { readonly [P in keyof T]: Readonly<T[P]>; }
 export interface MechState
 {
     readonly phi?: DeeplyReadonly<[string, number]>;
-    readonly solveResults: DeeplyReadonly<SolveResults>;
-    readonly links: DeeplyReadonly<Dictionary<Link>>;
+    readonly solveResults: SolveResults;
+    readonly links: dict.Dictionary<Link>;
     readonly loops: DeeplyReadonly<FuncDictionary<LoopDefinition>>;
-    readonly loopCache?: DeeplyReadonly<Loop[]>
+    readonly loopCache?: ReadonlyArray<Loop>
 }
 
 const initialState: MechState = Object.freeze({
@@ -72,28 +73,26 @@ export function sanitizeLink(link: Link): Link
 }
 
 export function linkReducer(
-    state:  Dictionary<Link>,
+    state:  dict.Dictionary<Link>,
     action: LinkActions
-): Dictionary<Link>
+): dict.Dictionary<Link>
 {
     switch (action.type)
     {
         case LinkActionTypes.Define: {
-            return fac(state, { [action.data.id]: sanitizeLink(action.data) });
+            return dict.add(state, action.data.id, sanitizeLink(action.data));
         }
 
         case LinkActionTypes.Undefine: {
-            return fdac(action.id, state);
+            return dict.remove(state, action.id);
         }
 
         case LinkActionTypes.Mutate: {
-            return fac(state, {
-                [action.id]: sanitizeLink(fac(state[action.id], action.data))
-            });
+            return dict.add(state, action.id, sanitizeLink(fac(state[action.id], action.data)));
         }
 
         case LinkActionTypes.Clear: {
-            return fac({});
+            return dict.create();
         }
 
         default:
