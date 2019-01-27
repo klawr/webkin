@@ -10,6 +10,7 @@ import { AppState } from '../app.state';
 import { Store } from '@ngrx/store';
 import * as dict from '../utils/dictionary';
 
+export const colors = ['#000','#00f','#0f0','#f00','#0ff','#f0f','#ff0','#fff'];
 
 @Component({
     selector: 'app-mech',
@@ -41,7 +42,6 @@ export class MechComponent implements OnInit
 
         // rcmds.grid({});
 
-        const colors = ['#000','#00f','#0f0','#f00','#0ff','#f0f','#ff0','#fff'];
         [...q_i].reverse().forEach((v,i) => {
             this.render(mech.links, v, rcmds, colors[i] || '#fff', mech.phi ? mech.phi[0] : undefined)
         });

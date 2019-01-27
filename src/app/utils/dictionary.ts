@@ -98,6 +98,7 @@ export function keys<T>(dict: Dictionary<T>)
 {
     return dict[$index];
 }
+
 export function elems<T>(dict: Dictionary<T>)
 {
     return dict[$index].map(k => dict[k]);
@@ -115,7 +116,26 @@ export function map<T, R>(dict: Dictionary<T>, proj: (v: T, k: string, d: Dictio
     return Object.freeze(self);
 }
 
-export function forEach<T, R>(dict: Dictionary<T>, f: (v: T, k: string, d: Dictionary<T>) => R)
+export function forEach<T, R>(dict: Dictionary<T>, f: (v: T, k: string, d: Dictionary<T>) => R): void
 {
     dict[$index].forEach((k) => f(dict[k], k, dict));
+}
+
+export function filter<T>(dict: Dictionary<T>, predicate: (v: T, k: string, d: Dictionary<T>) => boolean): Dictionary<T>
+{
+    const self = xcreate();
+    const idx = self[$index] = [] as string[];
+    const oidx = dict[$index];
+    const limit = oidx.length;
+    for (let i = 0; i < limit; ++i)
+    {
+        const k = oidx[i];
+        if (predicate(dict[k], k, dict))
+        {
+            self[k] = dict[k];
+            idx.push(k);
+        }
+    }
+    Object.freeze(idx);
+    return Object.freeze(self);
 }

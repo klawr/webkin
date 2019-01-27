@@ -16,6 +16,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSliderModule } from '@angular/material/slider';
+import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
@@ -28,6 +29,7 @@ import { MechComponent } from './mech/mech.component';
 import { SidebarComponent } from './sidebar/sidebar.component';
 import { LinkComponent } from './link/link.component';
 import { SolverComponent } from './solver/solver.component';
+import { SolveResultsComponent } from './solve-results/solve-results.component';
 import { uiStateReducer } from './model/uistate.reducer';
 
 @NgModule({
@@ -38,6 +40,7 @@ import { uiStateReducer } from './model/uistate.reducer';
         SidebarComponent,
         LinkComponent,
         SolverComponent,
+        SolveResultsComponent,
     ],
     imports: [
         StoreModule.forRoot({
@@ -59,6 +62,7 @@ import { uiStateReducer } from './model/uistate.reducer';
         MatSidenavModule,
         MatSlideToggleModule,
         MatSliderModule,
+        MatTableModule,
         MatTabsModule,
         MatTooltipModule
     ],

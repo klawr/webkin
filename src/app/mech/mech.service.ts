@@ -120,7 +120,7 @@ export class MechanismService
 
                     r = dict.add(r, guide[0], {
                         q: guide[1],
-                        v: 0,
+                        v: 1,
                         a: 0,
                         points: []
                     });
