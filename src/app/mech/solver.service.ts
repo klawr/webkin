@@ -64,7 +64,6 @@ class Matrix extends Array<number[]> {
         for (let i = n - 1; i >= 0; --i)
         {
             const row = A[i] = new Array<number>(n);
-            A.unshift(row);
             for (let j = n - 1; j >= 0; --j)
             {
                 row[j] = g(i, j, A);
@@ -169,9 +168,9 @@ class Matrix extends Array<number[]> {
 
         const X = Matrix.generateReverse(this.length, (i ,j , data) => {
             let acc = Y[i][j];
-            for (let k = 1; k < data.length; ++k)
+            for (let k = i + 1; k < data.length; ++k)
             {
-                acc -= R[i][k+i] * data[k][j];
+                acc -= R[i][k] * data[k][j];
             }
             return acc / R[i][i];
         });
@@ -335,10 +334,6 @@ export function metaSolver(d: LinSolve, loops: ReadonlyArray<Loop>)
             q_in = rnd()
         }
 
-        q_in = dict.filter(q_in, (v,k) => {
-            return  q_in[k].q !== null;
-        })
-
         const _loops = loops.slice().map(loop => loop.map(v => {
             if (v.id !== s[0])
             {
@@ -351,7 +346,7 @@ export function metaSolver(d: LinSolve, loops: ReadonlyArray<Loop>)
 
         let q_i = new Map(
             Object.getOwnPropertyNames(q_in)
-                  .filter(n => n !== s[0])
+                  .filter(n => n !== s[0] && vars.has(n))
                   .map(n => [n, q_in[n].q] as [string, number])
         );
 
