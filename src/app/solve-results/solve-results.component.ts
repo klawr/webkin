@@ -26,6 +26,7 @@ const resultSelector = createSelector(
 @Component({
     selector: 'app-solve-results',
     templateUrl: './solve-results.component.html',
+    styleUrls: ['./solve-results.component.css'],
     styles: ['.stretch {width:100% }']
 })
 export class SolveResultsComponent implements OnInit {
@@ -49,6 +50,9 @@ export class SolveResultsComponent implements OnInit {
 
     selectedResultIndex: Observable<number>;
     resultIndices: Observable<[number, string][]>;
+
+    /* export const colors = ['#000','#00f','#0f0','#f00','#0ff','#f0f','#ff0','#fff']; */
+    solveResultSelectorColor = ['Black', 'Blue', 'Green', 'Red', 'Cyan', 'Magenta', 'Yellow', 'White'];
 
     ngOnInit()
     {
