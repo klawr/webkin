@@ -32,6 +32,25 @@ const examples: Dictionary<MechState> = {
         }],
         phi: ['a0', 0]
     },
+    Stephenson2_Gear: {
+        solveResults: [],
+        solverId: SolverId.XySolver,
+        links: dict.create({
+            'G': sanitizeLink({ id:'G', edgeLengths: [], absAngle: Math.PI/2, relAngles: [], points: [] }),
+            'A': sanitizeLink({ id:'A', edgeLengths: [30,45], relAngles:[Math.PI/6], points: [] }),
+            'B': sanitizeLink({ id:'B', edgeLengths: [200], relAngles: [], points: [], joint: { linkId: 'A', mountId: 0 } }),
+            'C': sanitizeLink({ id:'C', edgeLengths: [200], relAngles: [], points: [], joint: { linkId: 'A', mountId: 1 } }),
+            'D': sanitizeLink({ id:'D', edgeLengths: [25,100], relAngles: [0], points: [], joint: {linkId: 'G', mountId: 0} }),
+        }),
+        loops: [{
+            right:{ linkId: 'D', mountId: 0 },
+            left: { linkId: 'B', mountId: 0}
+        }, {
+            right:{ linkId: 'D', mountId: 1 },
+            left: { linkId: 'C', mountId: 0}
+        }],
+        phi: ['A', 0]
+    },
     Stephenson2_Linear: {
         solveResults: [],
         solverId: SolverId.XySolver,
@@ -51,6 +70,66 @@ const examples: Dictionary<MechState> = {
             right:{linkId: 'r4', mountId: 0}
         }],
         phi: ['r2',Math.PI/4]
+    },
+    Stephenson2_Hip: {
+        solveResults: [],
+        solverId: SolverId.XySolver,
+        links: dict.create({
+            'BDF':sanitizeLink({ id:'BDF', edgeLengths: [125, 125], relAngles: [1.75], points: [] }),
+            'FH': sanitizeLink({ id:'FH' , edgeLengths: [100], relAngles: [], points: [],joint:{linkId:'BDF', mountId:0}}),
+            'DG': sanitizeLink({ id:'DG' , edgeLengths: [80], relAngles: [], points: [], joint: {linkId:'BDF', mountId:1}}),
+            'AB': sanitizeLink({ id:'AB',  edgeLengths: [500], absAngle: Math.PI, relAngles: [], points: []}),
+            'AC': sanitizeLink({ id:'AC',  edgeLengths: [350], relAngles: [], points:[], joint:{linkId:'AB', mountId:0} }),
+            'CGH':sanitizeLink({ id:'CGH', edgeLengths: [Math.SQRT2*100,50], relAngles:[1.4], points:[],joint:{linkId:'AC',mountId:0}})
+        }),
+        loops: [{
+            left: {linkId:'CGH', mountId:0},
+            right:{linkId:'FH' , mountId:0}
+        }, {
+            left: {linkId:'CGH', mountId:1},
+            right:{linkId:'DG', mountId:0}
+        }],
+        phi: ['BDF', Math.PI/2]
+    },
+    Stephenson2_Knee: {
+        solveResults: [],
+        solverId: SolverId.XySolver,
+        links: dict.create({
+            'BDF':sanitizeLink({ id:'BDF', edgeLengths: [100, 200], relAngles: [Math.PI/6], points: [] }),
+            'FH': sanitizeLink({ id:'FH' , edgeLengths: [450], relAngles: [], points: [],joint:{linkId:'BDF', mountId:0}}),
+            'DG': sanitizeLink({ id:'DG' , edgeLengths: [450], relAngles: [], points: [], joint: {linkId:'BDF', mountId:1}}),
+            'AB': sanitizeLink({ id:'AB',  edgeLengths: [500], absAngle: Math.PI, relAngles: [], points: []}),
+            'AC': sanitizeLink({ id:'AC',  edgeLengths: [50], relAngles: [], points:[], joint:{linkId:'AB', mountId:0} }),
+            'CGH':sanitizeLink({ id:'CGH', edgeLengths: [150,350], relAngles:[Math.PI/12], points:[],joint:{linkId:'AC',mountId:0}})
+        }),
+        loops: [{
+            left: {linkId:'CGH', mountId:0},
+            right:{linkId:'FH' , mountId:0}
+        }, {
+            left: {linkId:'CGH', mountId:1},
+            right:{linkId:'DG', mountId:0}
+        }],
+        phi: ['BDF', Math.PI/2 + 0.1]
+    },
+    Stephenson2_Ankle: {
+        solveResults: [],
+        solverId: SolverId.XySolver,
+        links: dict.create({
+            'BDF':sanitizeLink({ id:'BDF', edgeLengths: [30, 60], relAngles: [0.1], points: [] }),
+            'FH': sanitizeLink({ id:'FH' , edgeLengths: [200], relAngles: [], points: [],joint:{linkId:'BDF', mountId:0}}),
+            'DG': sanitizeLink({ id:'DG' , edgeLengths: [200], relAngles: [], points: [], joint: {linkId:'BDF', mountId:1}}),
+            'AB': sanitizeLink({ id:'AB',  edgeLengths: [500], absAngle: Math.PI, relAngles: [], points: []}),
+            'AC': sanitizeLink({ id:'AC',  edgeLengths: [50], relAngles: [], points:[], joint:{linkId:'AB', mountId:0} }),
+            'CGH':sanitizeLink({ id:'CGH', edgeLengths: [350,150], relAngles:[Math.PI/3], points:[],joint:{linkId:'AC',mountId:0}})
+        }),
+        loops: [{
+            left: {linkId:'CGH', mountId:0},
+            right:{linkId:'FH' , mountId:0}
+        }, {
+            left: {linkId:'CGH', mountId:1},
+            right:{linkId:'DG', mountId:0}
+        }],
+        phi: ['BDF', 4.6]
     },
     Fourbar: {
         solveResults: [],
@@ -79,11 +158,11 @@ const examples: Dictionary<MechState> = {
             'rc': sanitizeLink({ id: 'rc', edgeLengths: [], relAngles: [], absAngle: 0, points: []})
         }),
         loops: [{
-            left: {linkId: 'r3', mountId: 0},
-            right:{linkId: 'r1', mountId: 0}
+            right:{linkId: 'r3', mountId: 0},
+            left: {linkId: 'r1', mountId: 0}
         }, {
-            left: {linkId: 'r2', mountId: 0},
-            right:{linkId: 'r1', mountId: 1},
+            right:{linkId: 'r2', mountId: 0},
+            left: {linkId: 'r1', mountId: 1},
         }],
         phi: ['r1', 2]
     }
