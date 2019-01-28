@@ -394,13 +394,16 @@ function speed(loops: Loop[], J: Matrix, s: string)
 
 function accel(loops: Loop[], J: Matrix, q_r: SolveResult): number[]
 {
-    const accessOrResolve = (id: string, value?: number) =>
+    const accessOrResolveAngle = (id: string, value?: number) =>
         value === undefined ? q_r[id].q : value;
 
+    const accessOrResolveLength = (id: string, value?: number) =>
+        value === undefined ? 0 : value;
+
     const phi__ = loops.flatMap((row) =>
-        row.map((link) => [
-            accessOrResolve(link.id, link.length),
-            accessOrResolve(link.id, link.absAngle) + link.angleOffset,
+        row.filter(e => e.length !== undefined).map((link) => [
+            accessOrResolveLength(link.id, link.length),
+            accessOrResolveAngle(link.id, link.absAngle) + link.angleOffset,
             q_r[link.id] ? q_r[link.id].v : 0
         ]).map((cell) => [
             cell[0] * Math.cos(cell[1]) * cell[2] * cell[2],
