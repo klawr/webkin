@@ -97,7 +97,7 @@ const examples: Dictionary<MechState> = {
         links: dict.create({
             'BDF':sanitizeLink({ id:'BDF', edgeLengths: [100, 200], relAngles: [Math.PI/6], points: [] }),
             'FH': sanitizeLink({ id:'FH' , edgeLengths: [450], relAngles: [], points: [],joint:{linkId:'BDF', mountId:0}}),
-            'DG': sanitizeLink({ id:'DG' , edgeLengths: [450], relAngles: [], points: [], joint: {linkId:'BDF', mountId:1}}),
+            'DG': sanitizeLink({ id:'DG' , edgeLengths: [460], relAngles: [], points: [], joint: {linkId:'BDF', mountId:1}}),
             'AB': sanitizeLink({ id:'AB',  edgeLengths: [500], absAngle: Math.PI, relAngles: [], points: []}),
             'AC': sanitizeLink({ id:'AC',  edgeLengths: [50], relAngles: [], points:[], joint:{linkId:'AB', mountId:0} }),
             'CGH':sanitizeLink({ id:'CGH', edgeLengths: [150,350], relAngles:[Math.PI/12], points:[],joint:{linkId:'AC',mountId:0}})
