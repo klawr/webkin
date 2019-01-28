@@ -48,7 +48,7 @@ export class MechComponent implements OnInit
 
         const clrs = [...colors];
 
-        [...q_i].reverse().forEach((v,i) => {
+        [...q_i].forEach((v,i) => {
             this.render(mech.links, v, rcmds,
                 clrs[i] ? clrs[i] += resIdx === i ? 'f':'4' : resIdx === i ? '#ffff': '#fff4',
                 mech.phi ? mech.phi[0] : undefined,
