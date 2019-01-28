@@ -4,6 +4,7 @@ import { g2 } from 'g2d';
 import { Observable } from 'rxjs';
 import { MechanismService } from "./mech.service";
 import { map, filter, distinctUntilChanged, withLatestFrom } from 'rxjs/operators';
+import { combineLatest } from 'rxjs';
 import { Dictionary, MechState } from './mech.reducer';
 import { Link, SolveResult, SolveResults } from './mech.model';
 import { AppState } from '../app.state';
@@ -25,25 +26,31 @@ export class MechComponent implements OnInit
         private store: Store<AppState>,
         private mechService: MechanismService
     ) {
-        this.renderCommands = this.store.select(s => s.mech.solveResults).pipe(
-            distinctUntilChanged(),
-            filter(r => r && r.length > 0),
+        const solveResults = this.store.select(s => s.mech.solveResults).pipe(distinctUntilChanged());
+        const resIdx = this.store.select(r => r.uiState.activeResultIndex).pipe(distinctUntilChanged());
+
+        this.renderCommands = combineLatest(solveResults, resIdx).pipe(
+            filter(r => r[0] && r[0].length > 0),
             withLatestFrom(this.store.select(s => s.mech).pipe(distinctUntilChanged())),
-            map(([results, links]) => this.renderCombine(links, results))
+            map(([results, links]) => this.renderCombine(links, results[0], results[1]))
         );
     }
 
     ngOnInit(): void
     {
     }
-    private renderCombine(mech: MechState, q_i: SolveResults)
+    private renderCombine(mech: MechState, q_i: SolveResults, resIdx: number)
     {
         const rcmds = g2().view({x:650,y:400,cartesian:true});
 
         // rcmds.grid({});
 
+        const clrs = [...colors];
+
         [...q_i].reverse().forEach((v,i) => {
-            this.render(mech.links, v, rcmds, colors[i] || '#fff', mech.phi ? mech.phi[0] : undefined)
+            this.render(mech.links, v, rcmds,
+                clrs[i] ? clrs[i] += resIdx === i ? 'f':'2' : resIdx === i ? '#ffff': '#fff2',
+                mech.phi ? mech.phi[0] : undefined)
         });
 
         rcmds.gnd({});
@@ -57,9 +64,10 @@ export class MechComponent implements OnInit
             const pts = q_i_j.points.map(p => p.coordinates);
             if (!fixed(links[j]))
             {
-                const lcolor = j === guideId ? '#fff' : color;
+                const ls = j === guideId ? '#fff' : color;
+                const fs = ls[4] === 'f' ? ls.replace(/.$/,'3') : ls.replace(/.$/,'0')
                 // @ts-ignore
-                rcmds.ply({pts,fs:lcolor+'3',ls:lcolor,closed:true,lw:2});
+                rcmds.ply({pts,fs,ls,closed:true,lw:3});
             }
             else
             {
