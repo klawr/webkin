@@ -14,7 +14,7 @@
             </mat-select>
         </mat-form-field>
 
-        <mat-tab-group>
+        <mat-tab-group (selectedTabChange)="onTabChange($event)">
             <mat-tab label="Links">
                 <table class="stretch" mat-table [dataSource]="linkResultDataSource">
                     <ng-container matColumnDef="id">

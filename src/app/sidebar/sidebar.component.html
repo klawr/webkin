@@ -8,11 +8,13 @@
         </mat-option>
     </mat-select>
 </mat-form-field>
-
 <mat-accordion>
-    <app-link *ngFor="let link of (links | async)" [link]="link"></app-link>
-    <app-link></app-link>
+        <mat-accordion>
+                <app-link *ngFor="let link of (links | async)" [link]="link"></app-link>
+                <app-link></app-link>
+            </mat-accordion>
 </mat-accordion>
+
 <br>
 <hr>
 <br>

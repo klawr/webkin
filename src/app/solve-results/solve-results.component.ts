@@ -7,7 +7,7 @@ import { DataSource } from '@angular/cdk/table';
 import { map, filter } from 'rxjs/operators';
 import * as dict from '../utils/dictionary';
 import { MatSelectChange } from '@angular/material/select';
-import { UiStateSelectResult } from '../model/uistate.actions';
+import { UiStateSelectResult, UiStateChangeTabAction } from '../model/uistate.actions';
 import { colors } from '../mech/mech.component';
 
 const resultSelector = createSelector(
@@ -53,6 +53,12 @@ export class SolveResultsComponent implements OnInit {
 
     /* export const colors = ['#000','#00f','#0f0','#f00','#0ff','#f0f','#ff0','#fff']; */
     solveResultSelectorColor = ['Black', 'Blue', 'Green', 'Red', 'Cyan', 'Magenta', 'Yellow', 'White'];
+
+    onTabChange(a: any)
+    {
+        const link = !a.index;
+        this.store.dispatch(new UiStateChangeTabAction(link));
+    }
 
     ngOnInit()
     {

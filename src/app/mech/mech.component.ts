@@ -27,19 +27,20 @@ export class MechComponent implements OnInit
         private mechService: MechanismService
     ) {
         const solveResults = this.store.select(s => s.mech.solveResults).pipe(distinctUntilChanged());
-        const resIdx = this.store.select(r => r.uiState.activeResultIndex).pipe(distinctUntilChanged());
+        const resIdx = this.store.select(s => s.uiState.activeResultIndex).pipe(distinctUntilChanged());
+        const label = this.store.select(s => s.uiState.activeTab).pipe(distinctUntilChanged());
 
-        this.renderCommands = combineLatest(solveResults, resIdx).pipe(
+        this.renderCommands = combineLatest(solveResults, resIdx, label).pipe(
             filter(r => r[0] && r[0].length > 0),
             withLatestFrom(this.store.select(s => s.mech).pipe(distinctUntilChanged())),
-            map(([results, links]) => this.renderCombine(links, results[0], results[1]))
+            map(([results, links]) => this.renderCombine(links, results[0], results[1], results[2]))
         );
     }
 
     ngOnInit(): void
     {
     }
-    private renderCombine(mech: MechState, q_i: SolveResults, resIdx: number)
+    private renderCombine(mech: MechState, q_i: SolveResults, resIdx: number, label: boolean)
     {
         const rcmds = g2().view({x:650,y:400,cartesian:true});
 
@@ -50,30 +51,55 @@ export class MechComponent implements OnInit
         [...q_i].reverse().forEach((v,i) => {
             this.render(mech.links, v, rcmds,
                 clrs[i] ? clrs[i] += resIdx === i ? 'f':'2' : resIdx === i ? '#ffff': '#fff2',
-                mech.phi ? mech.phi[0] : undefined)
+                mech.phi ? mech.phi[0] : undefined,
+                label)
         });
 
         rcmds.gnd({});
         return rcmds;
     }
 
-    private render(links: Dictionary<Link>, q_i: SolveResult, rcmds: g2, color: string, guideId: string)
+    private render(links: Dictionary<Link>, q_i: SolveResult, rcmds: g2, color: string, guideId: string, label: boolean)
     {
         dict.forEach(q_i, (q_i_j, j) =>
         {
             const pts = q_i_j.points.map(p => p.coordinates);
             if (!fixed(links[j]))
             {
-                const ls = j === guideId ? '#fff' : color;
-                const fs = ls[4] === 'f' ? ls.replace(/.$/,'3') : ls.replace(/.$/,'0')
+                const ls = j === guideId ? '#ffff' : color;
+                const fs = ls[4] === 'f' ? ls.replace(/.$/,'3') : ls.replace(/.$/,'0');
+                const lw = ls[4] === 'f' ? 4 : 2;
                 // @ts-ignore
-                rcmds.ply({pts,fs,ls,closed:true,lw:3});
+                rcmds.ply({pts,fs,ls,lw,closed:true});
+                if (color[4] === 'f')
+                {
+                    if (label)
+                    {
+                        // @ts-ignore
+                        rcmds.label({str:`${links[j].id}`,font:'25px serif', fs:color,loc:'n'});
+                        pts.forEach(pt => rcmds.nod(pt));
+                    }
+                    else
+                    {
+                        pts.filter((_,i) => i < pts.length -1)
+                           .forEach((pt,i) =>
+                                rcmds.nod(pt).label({
+                                    str:`${links[j].id}(${i})`,
+                                    // @ts-ignore
+                                    font:'25px serif',
+                                    fs:color,
+                                    loc:'n'
+                                })
+                            )
+                    }
+                }
             }
             else
             {
                 // @ts-ignore
                 rcmds.ply({pts,ld:g2.symbol.dashdot});
             }
+
         })
 
         function fixed(link: Link)

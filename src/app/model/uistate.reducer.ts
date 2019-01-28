@@ -7,6 +7,7 @@ import { fac } from '../utils';
 const initialState: UiState = fac({
     activeSolver: "xy",
     activeResultIndex: 0,
+    activeTab: true,
 })
 
 export function uiStateReducer(state = initialState, action: UiStateActions)
@@ -18,6 +19,13 @@ export function uiStateReducer(state = initialState, action: UiStateActions)
                 activeResultIndex: action.resultIndex,
             });
         }
+
+        case UiStateActionType.LinkTab: {
+            return fac(state, {
+                activeTab: action.linkTab,
+            })
+        }
+
         default: {
             return state;
         }
