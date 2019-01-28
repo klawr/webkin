@@ -39,7 +39,7 @@ export class MechanismService
     {
         this.store.select(selectMech).pipe(
             filter(m => !!m.loopCache && m.loopCache.length > 0),
-            distinctUntilChanged((l, r) => l.loopCache === r.loopCache && l.phi === r.phi)
+            distinctUntilChanged((old, next) => old.loopCache === next.loopCache && old.phi === next.phi)
         ).subscribe(m => {
             let t = -performance.now();
 

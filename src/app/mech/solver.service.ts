@@ -180,7 +180,6 @@ class Matrix extends Array<number[]> {
     lr(): { L: Matrix, R: Matrix, P: Matrix }
     {
         const I = Matrix.identity(this.length);
-
         const CX = this.slice();
         const L = Matrix.generate(this.length, () => 0);
         const R = new Matrix(this);
@@ -195,35 +194,19 @@ class Matrix extends Array<number[]> {
                     jmax = i;
                 }
             }
-
-            const P_j = new Matrix(I);
-            P_j[j] = I[jmax];
-            P_j[jmax] = I[j];
-            P.unshift(P_j);
-
-            let tmp = L[j];
-            L[j] = L[jmax];
-            L[jmax] = tmp;
-            L[j][j] = 1;
-
-            tmp = R[j];
-            R[j] = R[jmax];
-            R[jmax] = tmp;
-
-            tmp = CX[j]
-            CX[j] = CX[jmax];
-            CX[jmax] = tmp;
-
+            const P_j = new Matrix(I); P_j[j] = I[jmax]; P_j[jmax] = I[j]; P.unshift(P_j);
+            let tmp = L[j]; L[j] = L[jmax]; L[jmax] = tmp; L[j][j] = 1;
+            tmp = R[j]; R[j] = R[jmax]; R[jmax] = tmp;
+            tmp = CX[j]; CX[j] = CX[jmax]; CX[jmax] = tmp;
             for (let i = j + 1; i < this.length; ++i)
             {
                 L[i][j] = R[i][j] / R[j][j];
                 for (let k = j; k < this.length; ++k)
                 {
-                    R[i][k] = R[i][k] - L[i][j] * R[j][k];
+                    R[i][k] -= L[i][j] * R[j][k];
                 }
             }
         }
-
         return {L,R, P: P.reduce((m1, m2) => m1.mult(m2)) };
     };
 
@@ -290,7 +273,9 @@ export function metaSolver(d: LinSolve, loops: ReadonlyArray<Loop>)
         const accessOrResolve = (id: string, value?: number) => value === undefined ? q.get(id) : value;
 
         return loops.flatMap((row) =>
-            row.map((link) => [ accessOrResolve(link.id, link.length), accessOrResolve(link.id, link.absAngle) + link.angleOffset ])
+            row.map((link) => [
+                accessOrResolve(link.id, link.length),
+                accessOrResolve(link.id, link.absAngle) + link.angleOffset])
                .map((cell) => [ cell[0] * Math.cos(cell[1]), cell[0] * Math.sin(cell[1]) ])
                .reduce((l, r) => [ l[0] + r[0], l[1] + r[1] ]));
     }
