@@ -59,13 +59,14 @@ export function sanitizeLink(link: Link): Link
             {
                 const a = points[i-1].length;
                 const b = edgeLengths[i];
-                const gamma = link.relAngles[i-1] - gammaOffset;
+                const gamma = link.relAngles[i-1] + gammaOffset;
 
                 const c = Math.sqrt(a * a + b * b - Math.cos(gamma) * 2 * a * b);
-                beta += Math.asin(Math.sin(gamma) * b / c);
-                const alpha = Math.sin(Math.sin(gamma) * a / c);
+                beta += Math.acos((a * a + c * c - b * b) / (2 * a * c));
+                const alpha = Math.acos((b * b + c * c - a * a) / (2 * a * c));
 
                 gammaOffset = alpha;
+
                 points.push(fac({ length: c, angleOffset: beta }));
             }
         }
