@@ -9,10 +9,18 @@
     </mat-select>
 </mat-form-field>
 <mat-accordion>
-        <mat-accordion>
-                <app-link *ngFor="let link of (links | async)" [link]="link"></app-link>
-                <app-link></app-link>
-            </mat-accordion>
+    <mat-expansion-panel>
+            <mat-expansion-panel-header>
+                    <mat-panel-title>
+                        Links
+                    </mat-panel-title>
+                </mat-expansion-panel-header>
+                <mat-accordion>
+                    <app-link *ngFor="let link of (links | async)" [link]="link"></app-link>
+                    <!-- <app-link></app-link> -->
+                </mat-accordion>
+    </mat-expansion-panel>
+
 </mat-accordion>
 
 <br>
@@ -20,5 +28,3 @@
 <br>
 <app-solver></app-solver>
 <app-solve-results></app-solve-results>
-
-
