@@ -191,7 +191,8 @@ export class MechanismService
                 velocity: { x:0, y: 0 },
                 acceleration: { x:0, y:0 }
             };
-            if (link.joint) {
+            if (link.joint)
+            {
                 start = computeLink(links[link.joint.linkId]).points[link.joint.mountId];
             }
 
@@ -203,7 +204,6 @@ export class MechanismService
                 velocity: newSpeed(start.velocity, len, angle, info),
                 acceleration: newAccel(start.acceleration, len, angle, info)
             });
-
             for (let i = 1; i < link.points.length; ++i)
             {
                 const p = link.points[i];
@@ -218,7 +218,6 @@ export class MechanismService
             points.push(start);
             return info;
         }
-
         dict.elems(links).forEach(computeLink);
         return q_i;
     }

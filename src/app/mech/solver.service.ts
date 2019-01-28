@@ -335,6 +335,10 @@ export function metaSolver(d: LinSolve, loops: ReadonlyArray<Loop>)
             q_in = rnd()
         }
 
+        q_in = dict.filter(q_in, (v,k) => {
+            return  q_in[k].q !== null;
+        })
+
         const _loops = loops.slice().map(loop => loop.map(v => {
             if (v.id !== s[0])
             {
@@ -403,7 +407,7 @@ function accel(loops: Loop[], J: Matrix, q_r: SolveResult): number[]
             cell[0] * Math.sin(cell[1]) * cell[2] * cell[2]
         ]).reduce((l, r) => [ l[0] - r[0], l[1] - r[1] ], [0, 0]));
 
-    return J.xy(phi__).concat(0);
+        return J.xy(phi__).concat(0);
 }
 
 function pack(q_i: [string, number][], speed?: number[], accel?: number[]): SolveResult

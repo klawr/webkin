@@ -50,7 +50,7 @@ export class MechComponent implements OnInit
 
         [...q_i].reverse().forEach((v,i) => {
             this.render(mech.links, v, rcmds,
-                clrs[i] ? clrs[i] += resIdx === i ? 'f':'2' : resIdx === i ? '#ffff': '#fff2',
+                clrs[i] ? clrs[i] += resIdx === i ? 'f':'4' : resIdx === i ? '#ffff': '#fff4',
                 mech.phi ? mech.phi[0] : undefined,
                 label)
         });
@@ -66,7 +66,13 @@ export class MechComponent implements OnInit
             const pts = q_i_j.points.map(p => p.coordinates);
             if (!fixed(links[j]))
             {
-                const ls = j === guideId ? '#ffff' : color;
+
+
+                const darkmode = false;
+
+
+                const guideColor = darkmode ? '#ffff' : '#000f';
+                const ls = j === guideId ? guideColor : color;
                 const fs = ls[4] === 'f' ? ls.replace(/.$/,'3') : ls.replace(/.$/,'0');
                 const lw = ls[4] === 'f' ? 4 : 2;
                 // @ts-ignore
