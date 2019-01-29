@@ -32,45 +32,45 @@ const examples: Dictionary<MechState> = {
         }],
         phi: ['a0', 0]
     },
-    Stephenson2_Gear: {
-        solveResults: [],
-        solverId: SolverId.XySolver,
-        links: dict.create({
-            'G': sanitizeLink({ id:'G', edgeLengths: [], absAngle: Math.PI/2, relAngles: [], points: [] }),
-            'A': sanitizeLink({ id:'A', edgeLengths: [30,45], relAngles:[Math.PI/6], points: [] }),
-            'B': sanitizeLink({ id:'B', edgeLengths: [200], relAngles: [], points: [], joint: { linkId: 'A', mountId: 0 } }),
-            'C': sanitizeLink({ id:'C', edgeLengths: [200], relAngles: [], points: [], joint: { linkId: 'A', mountId: 1 } }),
-            'D': sanitizeLink({ id:'D', edgeLengths: [25,100], relAngles: [0], points: [], joint: {linkId: 'G', mountId: 0} }),
-        }),
-        loops: [{
-            right:{ linkId: 'D', mountId: 0 },
-            left: { linkId: 'B', mountId: 0}
-        }, {
-            right:{ linkId: 'D', mountId: 1 },
-            left: { linkId: 'C', mountId: 0}
-        }],
-        phi: ['A', 0]
-    },
-    Stephenson2_Linear: {
-        solveResults: [],
-        solverId: SolverId.XySolver,
-        links: dict.create({
-            'r1': sanitizeLink({ id:'r1', edgeLengths: [100], absAngle: Math.PI/2, relAngles: [], points: [], joint: {linkId:'r6', mountId:0} }),
-            'r2': sanitizeLink({ id:'r2', edgeLengths: [180,180], relAngles: [2], points: []}),
-            'r3': sanitizeLink({ id:'r3', edgeLengths: [170], relAngles: [], points: [], joint: {linkId:'r2', mountId:1} }),
-            'r4': sanitizeLink({ id:'r4', edgeLengths: [250,150],relAngles: [Math.asin(0.5)], points: [], joint: {linkId:'r1', mountId:0} }),
-            'r5': sanitizeLink({ id:'r5', edgeLengths: [150], relAngles: [], points: [], joint: {linkId:'r2', mountId:0} }),
-            'r6': sanitizeLink({ id:'r6', edgeLengths: [], absAngle: 0, relAngles: [], points: [] }),
-        }),
-        loops: [{
-            left: {linkId: 'r5', mountId: 0},
-            right:{linkId: 'r4', mountId: 1}
-        },{
-            left: {linkId: 'r3', mountId: 0},
-            right:{linkId: 'r4', mountId: 0}
-        }],
-        phi: ['r2',Math.PI/4]
-    },
+    // Stephenson2_Gear: {
+    //     solveResults: [],
+    //     solverId: SolverId.XySolver,
+    //     links: dict.create({
+    //         'G': sanitizeLink({ id:'G', edgeLengths: [], absAngle: Math.PI/2, relAngles: [], points: [] }),
+    //         'A': sanitizeLink({ id:'A', edgeLengths: [30,45], relAngles:[Math.PI/6], points: [] }),
+    //         'B': sanitizeLink({ id:'B', edgeLengths: [200], relAngles: [], points: [], joint: { linkId: 'A', mountId: 0 } }),
+    //         'C': sanitizeLink({ id:'C', edgeLengths: [200], relAngles: [], points: [], joint: { linkId: 'A', mountId: 1 } }),
+    //         'D': sanitizeLink({ id:'D', edgeLengths: [25,100], relAngles: [0], points: [], joint: {linkId: 'G', mountId: 0} }),
+    //     }),
+    //     loops: [{
+    //         right:{ linkId: 'D', mountId: 0 },
+    //         left: { linkId: 'B', mountId: 0}
+    //     }, {
+    //         right:{ linkId: 'D', mountId: 1 },
+    //         left: { linkId: 'C', mountId: 0}
+    //     }],
+    //     phi: ['A', 0]
+    // },
+    // Stephenson2_Linear: {
+    //     solveResults: [],
+    //     solverId: SolverId.XySolver,
+    //     links: dict.create({
+    //         'r1': sanitizeLink({ id:'r1', edgeLengths: [100], absAngle: Math.PI/2, relAngles: [], points: [], joint: {linkId:'r6', mountId:0} }),
+    //         'r2': sanitizeLink({ id:'r2', edgeLengths: [180,180], relAngles: [2], points: []}),
+    //         'r3': sanitizeLink({ id:'r3', edgeLengths: [170], relAngles: [], points: [], joint: {linkId:'r2', mountId:1} }),
+    //         'r4': sanitizeLink({ id:'r4', edgeLengths: [250,150],relAngles: [Math.asin(0.5)], points: [], joint: {linkId:'r1', mountId:0} }),
+    //         'r5': sanitizeLink({ id:'r5', edgeLengths: [150], relAngles: [], points: [], joint: {linkId:'r2', mountId:0} }),
+    //         'r6': sanitizeLink({ id:'r6', edgeLengths: [], absAngle: 0, relAngles: [], points: [] }),
+    //     }),
+    //     loops: [{
+    //         left: {linkId: 'r5', mountId: 0},
+    //         right:{linkId: 'r4', mountId: 1}
+    //     },{
+    //         left: {linkId: 'r3', mountId: 0},
+    //         right:{linkId: 'r4', mountId: 0}
+    //     }],
+    //     phi: ['r2',Math.PI/4]
+    // },
     Stephenson2_Hip: {
         solveResults: [],
         solverId: SolverId.XySolver,
@@ -146,26 +146,26 @@ const examples: Dictionary<MechState> = {
         }],
         phi: ['A0A', 0]
     },
-    CouplingGear: {
-        solveResults: [],
-        solverId: SolverId.XySolver,
-        links: dict.create({
-            'g0': sanitizeLink({ id: 'g0', edgeLengths: [Math.hypot(300,450), Math.hypot(300,550)], absAngle: Math.atan2(11,6), relAngles: [cos(Math.hypot(6,9),Math.hypot(6,11),2)], points: [] }),
-            'r5': sanitizeLink({ id: 'r5', edgeLengths: [300], relAngles: [], points: [], joint: {linkId: 'g0', mountId: 0} }),
-            'r3': sanitizeLink({ id: 'r3', edgeLengths: [Math.hypot(100,250)], relAngles: [], points: [], joint: {linkId: 'r5', mountId:0}}),
-            'r1': sanitizeLink({ id: 'r1', edgeLengths: [Math.hypot(100,200), Math.hypot(150,100)], relAngles: [cos(Math.hypot(2,4),Math.hypot(3,2),Math.hypot(5,2))], points: [], joint: {linkId: 'g0', mountId: 1}}),
-            'r2': sanitizeLink({ id: 'r2', edgeLengths: [Math.SQRT2*200], relAngles: [], points: [], joint: {linkId: 'rc', mountId: 0} }),
-            'rc': sanitizeLink({ id: 'rc', edgeLengths: [], relAngles: [], absAngle: 0, points: []})
-        }),
-        loops: [{
-            right:{linkId: 'r3', mountId: 0},
-            left: {linkId: 'r1', mountId: 0}
-        }, {
-            right:{linkId: 'r2', mountId: 0},
-            left: {linkId: 'r1', mountId: 1},
-        }],
-        phi: ['r1', 2]
-    }
+    // CouplingGear: {
+    //     solveResults: [],
+    //     solverId: SolverId.XySolver,
+    //     links: dict.create({
+    //         'g0': sanitizeLink({ id: 'g0', edgeLengths: [Math.hypot(300,450), Math.hypot(300,550)], absAngle: Math.atan2(11,6), relAngles: [cos(Math.hypot(6,9),Math.hypot(6,11),2)], points: [] }),
+    //         'r5': sanitizeLink({ id: 'r5', edgeLengths: [300], relAngles: [], points: [], joint: {linkId: 'g0', mountId: 0} }),
+    //         'r3': sanitizeLink({ id: 'r3', edgeLengths: [Math.hypot(100,250)], relAngles: [], points: [], joint: {linkId: 'r5', mountId:0}}),
+    //         'r1': sanitizeLink({ id: 'r1', edgeLengths: [Math.hypot(100,200), Math.hypot(150,100)], relAngles: [cos(Math.hypot(2,4),Math.hypot(3,2),Math.hypot(5,2))], points: [], joint: {linkId: 'g0', mountId: 1}}),
+    //         'r2': sanitizeLink({ id: 'r2', edgeLengths: [Math.SQRT2*200], relAngles: [], points: [], joint: {linkId: 'rc', mountId: 0} }),
+    //         'rc': sanitizeLink({ id: 'rc', edgeLengths: [], relAngles: [], absAngle: 0, points: []})
+    //     }),
+    //     loops: [{
+    //         right:{linkId: 'r3', mountId: 0},
+    //         left: {linkId: 'r1', mountId: 0}
+    //     }, {
+    //         right:{linkId: 'r2', mountId: 0},
+    //         left: {linkId: 'r1', mountId: 1},
+    //     }],
+    //     phi: ['r1', 2]
+    // }
 }
 
 @Injectable({
