@@ -1,14 +1,13 @@
 import { Injectable } from '@angular/core';
-import { createSelector, Store } from '@ngrx/store';
-import { Observable } from 'rxjs';
+import { Store } from '@ngrx/store';
 import * as _ from 'lodash';
-import { map, filter, distinctUntilChanged } from 'rxjs/operators';
+import { distinctUntilChanged, filter } from 'rxjs/operators';
 import { AppState } from '../app.state';
 import * as dict from '../utils/dictionary';
-import { JointId, Loop, Variable, SolveResult, LinkInfo, Link, Vector2, SolveResults, LinkPointInfo, MechPointInfo } from './mech.model';
-import { xySolver, nearlyEqual, SolveFunc, MetaSolveFunc, solver } from './solver.service';
-import { MechState, Dictionary } from './mech.reducer';
 import { SolveResultsUpdateAction } from './mech.actions';
+import { Link, LinkInfo, Loop, MechPointInfo, SolveResult, SolveResults, Variable, Vector2 } from './mech.model';
+import { Dictionary } from './mech.reducer';
+import { MetaSolveFunc, solver } from './solver.service';
 
 
 

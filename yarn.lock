@@ -2512,9 +2512,9 @@ fstream@^1.0.0, fstream@^1.0.2:
     mkdirp ">=0.5 0"
     rimraf "2"
 
-"g2d@..\\..\\HiWi\\g2\\g2d-2.5.3.tgz":
+g2-module@^2.5.3:
   version "2.5.3"
-  resolved "..\\..\\HiWi\\g2\\g2d-2.5.3.tgz#bf10514017dcf7af844517a3c202efd28700aec0"
+  resolved "https://registry.yarnpkg.com/g2-module/-/g2-module-2.5.3.tgz#3ab371a4a989382e830ba717e14ce46000cd58f4"
 
 gauge@~2.7.3:
   version "2.7.4"

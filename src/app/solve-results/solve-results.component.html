@@ -8,6 +8,9 @@
 
         <mat-form-field>
             <mat-select placeholder="result selection" [value]="(selectedResultIndex | async)" (selectionChange)="onResultSelectionChange($event)">
+                <mat-option #resultSelection>
+                    -- None --
+                </mat-option>
                 <mat-option #resultSelection *ngFor="let result of (resultIndices | async); index as idx" [value]="result[0]">
                     {{solveResultSelectorColor[idx]}}
                 </mat-option>
@@ -22,15 +25,15 @@
                         <td mat-cell *matCellDef="let r">{{r.id}}</td>
                     </ng-container>
                     <ng-container matColumnDef="q">
-                        <th mat-header-cell *matHeaderCellDef> Angle / Length </th>
+                        <th mat-header-cell *matHeaderCellDef>Current Angle</th>
                         <td mat-cell *matCellDef="let r">{{r.q}}</td>
                     </ng-container>
                     <ng-container matColumnDef="omega">
-                        <th mat-header-cell *matHeaderCellDef> Angularspeed: ω </th>
+                        <th mat-header-cell *matHeaderCellDef>Angular velocity</th>
                         <td mat-cell *matCellDef="let r">{{r.v}}</td>
                     </ng-container>
                     <ng-container matColumnDef="omegax">
-                        <th mat-header-cell *matHeaderCellDef> Acceleration: ω' </th>
+                        <th mat-header-cell *matHeaderCellDef>Angular acceleration</th>
                         <td mat-cell *matCellDef="let r">{{r.a}}</td>
                     </ng-container>
                     <tr mat-header-row *matHeaderRowDef="linkResultDataSource.cols"></tr>

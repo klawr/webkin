@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewChild, ElementRef, Input, OnDestroy, AfterViewInit } from '@angular/core';
 
-import { g2 } from 'g2d';
+import { g2 } from 'g2-module';
 import { Observable, Subject, ConnectableObservable, asapScheduler, BehaviorSubject } from 'rxjs';
 import { publishBehavior, first, takeUntil, delay } from 'rxjs/operators';
 

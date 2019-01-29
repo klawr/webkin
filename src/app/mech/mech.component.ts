@@ -1,6 +1,6 @@
 
 import { Component, OnInit } from '@angular/core';
-import { g2 } from 'g2d';
+import { g2 } from 'g2-module';
 import { Observable } from 'rxjs';
 import { MechanismService } from "./mech.service";
 import { map, filter, distinctUntilChanged, withLatestFrom } from 'rxjs/operators';

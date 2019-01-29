@@ -369,7 +369,9 @@ function speed(loops: Loop[], J: Matrix, s: string)
         })
         .reduce((l, r) => [ l[0] + r[0], l[1] + r[1] ], [0, 0])
     );
-    return J.xy(phi_).concat(1);
+    return J.invLR().map((col) =>
+            col.reduce((acc, cur, idx) => acc -(cur * phi_[idx]), 0)
+        ).concat(1); //J.xy(phi_).concat(1);
 }
 
 function accel(loops: Loop[], J: Matrix, q_r: SolveResult): number[]
@@ -390,7 +392,9 @@ function accel(loops: Loop[], J: Matrix, q_r: SolveResult): number[]
             cell[0] * Math.sin(cell[1]) * cell[2] * cell[2]
         ]).reduce((l, r) => [ l[0] - r[0], l[1] - r[1] ], [0, 0]));
 
-        return J.xy(phi__).concat(0);
+        return J.invLR().map((col) =>
+            col.reduce((acc, cur, idx) => acc -(cur * phi__[idx]), 0)
+        ).concat(0); //J.xy(phi__).concat(0);
 }
 
 function pack(q_i: [string, number][], speed?: number[], accel?: number[]): SolveResult
