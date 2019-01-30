@@ -8,9 +8,6 @@
 
         <mat-form-field>
             <mat-select placeholder="result selection" [value]="(selectedResultIndex | async)" (selectionChange)="onResultSelectionChange($event)">
-                <mat-option #resultSelection>
-                    -- None --
-                </mat-option>
                 <mat-option #resultSelection *ngFor="let result of (resultIndices | async); index as idx" [value]="result[0]">
                     {{solveResultSelectorColor[idx]}}
                 </mat-option>
