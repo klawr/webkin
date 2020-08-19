@@ -1,3 +1,4 @@
+# Abgabe für das Modul Webkinematik an der FH-Dortmund
 
 Programm im light-mode ausführen durch npm start
 alternativ kann auch der dark-mode ./dist/angular/index.html
